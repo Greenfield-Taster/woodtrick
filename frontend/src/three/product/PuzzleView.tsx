@@ -5,6 +5,7 @@ import type { Artwork } from '../../data/catalog'
 import { artworkCanvas } from '../../art/artwork'
 import { artworkPieceMaterials } from '../piece/woodMaterial'
 import { useInViewport } from '../../lib/useInViewport'
+import { useOrbitDrag } from '../../lib/useOrbitDrag'
 import { assemblePuzzle, previewGrid } from './assemble'
 
 interface PuzzleViewProps {
@@ -15,9 +16,12 @@ interface PuzzleViewProps {
   flipped: boolean
 }
 
-function Panel({ front, back, pieces, flipped }: PuzzleViewProps) {
+interface PanelProps extends PuzzleViewProps {
+  orbit: React.RefObject<{ yaw: number; pitch: number }>
+}
+
+function Panel({ front, back, pieces, flipped, orbit }: PanelProps) {
   const group = useRef<THREE.Group>(null)
-  const drag = useRef({ active: false, x: 0, y: 0, yaw: 0, pitch: 0 })
 
   const { rows, cols } = previewGrid(pieces)
 
@@ -30,52 +34,21 @@ function Panel({ front, back, pieces, flipped }: PuzzleViewProps) {
   useEffect(() => () => puzzle.dispose(), [puzzle])
   useEffect(() => () => kit.dispose(), [kit])
 
-  useEffect(() => {
-    const up = () => {
-      drag.current.active = false
-    }
-    const move = (event: PointerEvent) => {
-      if (!drag.current.active) return
-      drag.current.yaw += (event.clientX - drag.current.x) * 0.008
-      drag.current.pitch = THREE.MathUtils.clamp(
-        drag.current.pitch + (event.clientY - drag.current.y) * 0.006,
-        -0.7,
-        0.7,
-      )
-      drag.current.x = event.clientX
-      drag.current.y = event.clientY
-    }
-    window.addEventListener('pointerup', up)
-    window.addEventListener('pointermove', move)
-    return () => {
-      window.removeEventListener('pointerup', up)
-      window.removeEventListener('pointermove', move)
-    }
-  }, [])
-
   useFrame(({ clock }, delta) => {
     if (!group.current) return
     const idle = Math.sin(clock.elapsedTime * 0.35) * 0.12
-    const targetYaw = drag.current.yaw + (flipped ? Math.PI : 0) + idle
+    const targetYaw = (orbit.current?.yaw ?? 0) + (flipped ? Math.PI : 0) + idle
     group.current.rotation.y = THREE.MathUtils.damp(group.current.rotation.y, targetYaw, 5, delta)
     group.current.rotation.x = THREE.MathUtils.damp(
       group.current.rotation.x,
-      drag.current.pitch + Math.sin(clock.elapsedTime * 0.27) * 0.05,
+      (orbit.current?.pitch ?? 0) + Math.sin(clock.elapsedTime * 0.27) * 0.05,
       5,
       delta,
     )
   })
 
   return (
-    <group
-      ref={group}
-      scale={3.4}
-      onPointerDown={(event) => {
-        drag.current.active = true
-        drag.current.x = event.clientX
-        drag.current.y = event.clientY
-      }}
-    >
+    <group ref={group} scale={3.4}>
       {puzzle.slots.map((geometry, slot) => (
         <mesh key={slot} geometry={geometry} material={kit.materials[slot]} castShadow />
       ))}
@@ -85,20 +58,28 @@ function Panel({ front, back, pieces, flipped }: PuzzleViewProps) {
 
 export function PuzzleView(props: PuzzleViewProps) {
   const { ref, visible } = useInViewport<HTMLDivElement>()
+  // On the wrapper rather than the mesh, so the grab starts anywhere in the
+  // frame — hunting for the piece itself to turn it is a poor way to find out
+  // the thing turns at all.
+  const orbit = useOrbitDrag<HTMLDivElement>()
 
   return (
-    <div ref={ref} className="h-full w-full">
+    <div
+      ref={ref}
+      onPointerDown={orbit.onPointerDown}
+      className={['h-full w-full', orbit.dragging ? 'cursor-grabbing' : 'cursor-grab'].join(' ')}
+      style={{ touchAction: 'pan-y' }}
+    >
       <Canvas
         frameloop={visible ? 'always' : 'never'}
         dpr={[1, 2]}
         camera={{ fov: 32, position: [0, 0, 8] }}
         gl={{ antialias: true }}
-        style={{ cursor: 'grab', touchAction: 'none' }}
       >
         <ambientLight intensity={0.55} color="#f5e6d2" />
         <directionalLight position={[4, 6, 7]} intensity={2.3} color="#ffe8c8" />
         <directionalLight position={[-6, -2, -5]} intensity={1.2} color="#7c93c6" />
-        <Panel {...props} />
+        <Panel {...props} orbit={orbit.offset} />
       </Canvas>
     </div>
   )

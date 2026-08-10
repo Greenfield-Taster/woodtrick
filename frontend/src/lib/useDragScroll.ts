@@ -66,6 +66,15 @@ export function useDragScroll<T extends HTMLElement = HTMLDivElement>() {
     setDragging(true)
   }
 
+  /**
+   * Cards are links, and a link answers a press-and-drag by starting a native
+   * drag-and-drop of itself — which cancels the pointer stream, so the rail
+   * would stop dead a few pixels in whenever the grab landed on a card.
+   */
+  const onDragStart = (event: React.DragEvent<T>) => {
+    event.preventDefault()
+  }
+
   /** Swallows the click that ends a drag, so throwing the rail never navigates. */
   const onClickCapture = (event: React.MouseEvent<T>) => {
     if (state.current.moved > 6) {
@@ -81,5 +90,5 @@ export function useDragScroll<T extends HTMLElement = HTMLDivElement>() {
     node.scrollBy({ left: direction * node.clientWidth * 0.8, behavior: 'smooth' })
   }
 
-  return { ref, dragging, edges, onPointerDown, onClickCapture, scrollByPage }
+  return { ref, dragging, edges, onPointerDown, onDragStart, onClickCapture, scrollByPage }
 }

@@ -4,6 +4,7 @@ import * as THREE from 'three'
 import type { Artwork } from '../../data/catalog'
 import { artworkCanvas } from '../../art/artwork'
 import { useInViewport } from '../../lib/useInViewport'
+import { useOrbitDrag } from '../../lib/useOrbitDrag'
 import { buildPuzzle } from './geometry'
 import { artworkPieceMaterials } from './woodMaterial'
 
@@ -14,7 +15,12 @@ interface FlipPieceProps {
   progress: React.RefObject<number>
 }
 
-function Piece({ front, back, progress }: FlipPieceProps) {
+interface PieceProps extends FlipPieceProps {
+  /** Whatever the visitor has turned the piece by, on top of the scroll. */
+  orbit: React.RefObject<{ yaw: number; pitch: number }>
+}
+
+function Piece({ front, back, progress, orbit }: PieceProps) {
   const mesh = useRef<THREE.Mesh>(null)
 
   // One piece lifted out of the middle of a small puzzle, so its outline has
@@ -48,9 +54,16 @@ function Piece({ front, back, progress }: FlipPieceProps) {
 
   useFrame(({ clock }, delta) => {
     if (!mesh.current) return
-    const target = (progress.current ?? 0) * Math.PI
+    // Scroll and hand add up rather than compete: turning the piece yourself
+    // shifts the zero point, and scrolling on keeps flipping it from there.
+    const target = (progress.current ?? 0) * Math.PI + (orbit.current?.yaw ?? 0)
     mesh.current.rotation.y = THREE.MathUtils.damp(mesh.current.rotation.y, target, 6, delta)
-    mesh.current.rotation.x = Math.sin(clock.elapsedTime * 0.45) * 0.09
+    mesh.current.rotation.x = THREE.MathUtils.damp(
+      mesh.current.rotation.x,
+      (orbit.current?.pitch ?? 0) + Math.sin(clock.elapsedTime * 0.45) * 0.09,
+      6,
+      delta,
+    )
     mesh.current.rotation.z = Math.cos(clock.elapsedTime * 0.32) * 0.05
   })
 
@@ -63,9 +76,17 @@ function Piece({ front, back, progress }: FlipPieceProps) {
 
 export function FlipPiece({ front, back, progress }: FlipPieceProps) {
   const { ref, visible } = useInViewport<HTMLDivElement>()
+  const orbit = useOrbitDrag<HTMLDivElement>()
 
   return (
-    <div ref={ref} className="h-full w-full">
+    <div
+      ref={ref}
+      onPointerDown={orbit.onPointerDown}
+      className={['h-full w-full', orbit.dragging ? 'cursor-grabbing' : 'cursor-grab'].join(' ')}
+      // pan-y, not none: a finger dragging sideways turns the piece, but one
+      // dragging up the page must still scroll past this section.
+      style={{ touchAction: 'pan-y' }}
+    >
       <Canvas
         dpr={[1, 2]}
         camera={{ fov: 34, position: [0, 0, 7] }}
@@ -75,7 +96,7 @@ export function FlipPiece({ front, back, progress }: FlipPieceProps) {
         <ambientLight intensity={0.5} color="#f3e2cb" />
         <directionalLight position={[4, 5, 6]} intensity={2.4} color="#ffe9cb" />
         <directionalLight position={[-5, -1, -4]} intensity={1.1} color="#7f96c4" />
-        <Piece front={front} back={back} progress={progress} />
+        <Piece front={front} back={back} progress={progress} orbit={orbit.offset} />
       </Canvas>
     </div>
   )

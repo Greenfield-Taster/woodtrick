@@ -40,7 +40,9 @@ export function HiddenSide() {
             <div className="aspect-square w-full rounded-sm bg-gradient-to-b from-ink-soft to-ink">
               <FlipPiece front={front} back={back} progress={progress} />
             </div>
-            <p className="mt-4 text-center text-xs text-paper/35">Scroll to turn the piece</p>
+            <p className="mt-4 text-center text-xs text-paper/35">
+              Scroll to turn the piece — or take hold of it yourself
+            </p>
           </div>
         </div>
       </div>

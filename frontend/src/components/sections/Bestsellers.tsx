@@ -67,6 +67,7 @@ export function Bestsellers() {
       <div
         ref={rail.ref}
         onPointerDown={rail.onPointerDown}
+        onDragStart={rail.onDragStart}
         onClickCapture={rail.onClickCapture}
         className={[
           'no-scrollbar mt-14 overflow-x-auto overscroll-x-contain pb-4',
