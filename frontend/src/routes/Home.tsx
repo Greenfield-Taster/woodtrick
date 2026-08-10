@@ -1,0 +1,21 @@
+import { Hero } from '../components/sections/Hero'
+import { Reasons } from '../components/sections/Reasons'
+import { Collections } from '../components/sections/Collections'
+import { Bestsellers } from '../components/sections/Bestsellers'
+import { Sizes } from '../components/sections/Sizes'
+import { HiddenSide } from '../components/sections/HiddenSide'
+import { Trust } from '../components/sections/Trust'
+
+export function Home() {
+  return (
+    <>
+      <Hero />
+      <Reasons />
+      <Collections />
+      <Bestsellers />
+      <Sizes />
+      <HiddenSide />
+      <Trust />
+    </>
+  )
+}

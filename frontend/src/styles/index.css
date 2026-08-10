@@ -1,0 +1,176 @@
+@import 'tailwindcss';
+
+@import '@fontsource-variable/fraunces/full.css';
+@import '@fontsource-variable/inter-tight/index.css';
+
+@theme {
+  /* Surfaces — warm near-blacks, never neutral grey. */
+  --color-ink: #14100c;
+  --color-ink-soft: #221b15;
+  --color-ink-line: #33291f;
+
+  /* Light ground for the paper sections. */
+  --color-paper: #f3ece1;
+  --color-paper-soft: #e7dccd;
+
+  /* Wood is the only product colour. */
+  --color-birch: #e0c398;
+  --color-oak: #c39a63;
+  --color-walnut: #7a4e28;
+
+  /* One accent. Used for CTA, price, focus. Nothing else. */
+  --color-ember: #d8602c;
+  --color-ember-soft: #ea7a49;
+
+  --color-moss: #5a6b4c;
+
+  --font-display: 'Fraunces Variable', Georgia, 'Times New Roman', serif;
+  --font-sans: 'Inter Tight Variable', system-ui, -apple-system, sans-serif;
+
+  --ease-out-back: cubic-bezier(0.34, 1.4, 0.64, 1);
+  --ease-out-soft: cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@layer base {
+  :root {
+    color-scheme: dark;
+  }
+
+  html {
+    scroll-behavior: smooth;
+    -webkit-text-size-adjust: 100%;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    html {
+      scroll-behavior: auto;
+    }
+  }
+
+  body {
+    margin: 0;
+    background-color: var(--color-ink);
+    color: var(--color-paper);
+    font-family: var(--font-sans);
+    font-synthesis-weight: none;
+    -webkit-font-smoothing: antialiased;
+    overflow-x: hidden;
+  }
+
+  h1,
+  h2,
+  h3 {
+    font-family: var(--font-display);
+    font-variation-settings: 'SOFT' 12, 'WONK' 1, 'opsz' 84;
+    font-weight: 500;
+    text-wrap: balance;
+    letter-spacing: -0.02em;
+    line-height: 0.98;
+  }
+
+  ::selection {
+    background: var(--color-ember);
+    color: var(--color-ink);
+  }
+
+  :focus-visible {
+    outline: 2px solid var(--color-ember);
+    outline-offset: 3px;
+    border-radius: 2px;
+  }
+
+  button {
+    font: inherit;
+    color: inherit;
+  }
+
+  /* Firefox keeps its own scrollbar model; both are intentionally quiet. */
+  * {
+    scrollbar-color: var(--color-ink-line) transparent;
+    scrollbar-width: thin;
+  }
+
+  ::-webkit-scrollbar {
+    width: 10px;
+    height: 10px;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    background: var(--color-ink-line);
+    border-radius: 99px;
+    border: 3px solid var(--color-ink);
+  }
+}
+
+@utility container-page {
+  width: 100%;
+  margin-inline: auto;
+  max-width: 88rem;
+  padding-inline: 1.25rem;
+
+  @media (width >= 48rem) {
+    padding-inline: 2.5rem;
+  }
+
+  @media (width >= 80rem) {
+    padding-inline: 4rem;
+  }
+}
+
+/* Fine film grain. Sells the "wood, not screen" feeling more than any texture image. */
+@utility grain {
+  position: relative;
+
+  &::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    opacity: 0.35;
+    mix-blend-mode: overlay;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='3'/%3E%3C/filter%3E%3Crect width='160' height='160' filter='url(%23n)' opacity='0.5'/%3E%3C/svg%3E");
+  }
+}
+
+/* Small caps label used above section headings. */
+@utility eyebrow {
+  font-family: var(--font-sans);
+  font-size: 0.6875rem;
+  font-weight: 500;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: color-mix(in oklab, var(--color-birch) 70%, transparent);
+}
+
+@utility rule-line {
+  height: 1px;
+  background: linear-gradient(
+    to right,
+    transparent,
+    var(--color-ink-line) 15%,
+    var(--color-ink-line) 85%,
+    transparent
+  );
+}
+
+/* Entrance used by the scroll reveal hook. */
+@utility reveal {
+  opacity: 0;
+  transform: translateY(1.75rem);
+  transition:
+    opacity 0.9s var(--ease-out-soft),
+    transform 0.9s var(--ease-out-soft);
+
+  &[data-revealed='true'] {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .reveal {
+    opacity: 1;
+    transform: none;
+    transition: none;
+  }
+}
