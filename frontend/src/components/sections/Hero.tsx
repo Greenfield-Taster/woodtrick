@@ -1,16 +1,43 @@
+import { useEffect, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { HeroScene } from '../../three/hero/HeroScene'
 
 export function Hero() {
+  const section = useRef<HTMLElement>(null)
+  const copy = useRef<HTMLDivElement>(null)
+  const [reserve, setReserve] = useState({ top: 0.1, bottom: 0.3 })
+
+  // The scene has to keep the word clear of the header above and this copy
+  // below, and neither is a number worth guessing: the copy is three lines on
+  // a desktop and six with stacked buttons on a small phone. Measure them.
+  useEffect(() => {
+    const measure = () => {
+      if (!section.current || !copy.current) return
+      const height = section.current.clientHeight
+      if (height <= 0) return
+      const header = document.querySelector('header')?.offsetHeight ?? 64
+      setReserve({
+        top: Math.min(0.3, header / height),
+        bottom: Math.min(0.6, copy.current.offsetHeight / height),
+      })
+    }
+
+    measure()
+    const observer = new ResizeObserver(measure)
+    if (section.current) observer.observe(section.current)
+    if (copy.current) observer.observe(copy.current)
+    return () => observer.disconnect()
+  }, [])
+
   return (
-    <section className="relative min-h-[100svh] overflow-hidden grain">
-      <HeroScene />
+    <section ref={section} className="relative min-h-[100svh] overflow-hidden grain">
+      <HeroScene reserve={reserve} />
 
       {/* The 3D pieces spell the name; the heading below carries it for
           screen readers and for anyone who never gets the canvas. */}
       <h1 className="sr-only">Unidragon — wooden puzzles cut one piece at a time</h1>
 
-      <div className="pointer-events-none absolute inset-x-0 bottom-0 pb-14 md:pb-20">
+      <div ref={copy} className="pointer-events-none absolute inset-x-0 bottom-0 pb-14 md:pb-20">
         <div className="container-page">
           <div className="grid gap-10 md:grid-cols-12 md:items-end">
             <p

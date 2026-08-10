@@ -51,7 +51,9 @@ export function ProductPage() {
         </nav>
 
         <div className="grid gap-12 md:grid-cols-12 md:gap-10">
-          <div className="md:col-span-7">
+          {/* min-w-0: the 3D canvas carries a pixel width, and a grid item
+              refuses to shrink below its content unless told it may. */}
+          <div className="min-w-0 md:col-span-7">
             <div className="relative aspect-square overflow-hidden rounded-sm bg-gradient-to-b from-ink-soft to-ink">
               <PuzzleView
                 front={artworkCanvas(product.artwork, 1400)}

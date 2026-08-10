@@ -14,8 +14,21 @@ const WIDE_LINES = ['UNIDRAGON']
 const NARROW_LINES = ['UNI', 'DRAGON']
 const WORD_WIDTH = 12
 
+export interface HeroReserve {
+  /** Share of the section's height taken by the header above, 0..1. */
+  top: number
+  /** Share taken by the copy below. */
+  bottom: number
+}
+
+interface FitCameraProps {
+  width: number
+  height: number
+  reserve: HeroReserve
+}
+
 /** Pulls the camera back just far enough to hold the wordmark with margin. */
-function FitCamera({ width, height }: { width: number; height: number }) {
+function FitCamera({ width, height, reserve }: FitCameraProps) {
   const { camera, size } = useThree()
 
   useEffect(() => {
@@ -24,15 +37,28 @@ function FitCamera({ width, height }: { width: number; height: number }) {
     const vFov = THREE.MathUtils.degToRad(perspective.fov)
     const half = 2 * Math.tan(vFov / 2)
 
-    // Fit whichever axis runs out first, with room for the copy underneath.
-    const byWidth = (width * 1.12) / (half * aspect)
-    const byHeight = (height * 1.9) / half
-    const aim = -0.15
+    // A phone needs more air than a desktop. At 90% of the viewport the word
+    // touches both edges, which reads as a crop however carefully it fits.
+    const margin = size.width < 640 ? 1.36 : 1.14
 
-    perspective.position.set(0, aim, THREE.MathUtils.clamp(Math.max(byWidth, byHeight), 8, 70))
+    // The clear band between the header and the copy. Without this the word
+    // centres itself in the whole section and collides with one or the other
+    // on any short viewport — a phone held sideways is the worst case, where
+    // the two together take two thirds of the height.
+    const band = Math.max(0.32, 1 - reserve.top - reserve.bottom)
+
+    const byWidth = (width * margin) / (half * aspect)
+    const byHeight = (height * 1.3) / (half * band)
+    const z = THREE.MathUtils.clamp(Math.max(byWidth, byHeight), 8, 70)
+
+    // Put the word in the middle of that band rather than the middle of the
+    // screen. Aiming off centre is what moves it there.
+    const aim = (reserve.top + band / 2 - 0.5) * half * z
+
+    perspective.position.set(0, aim, z)
     perspective.lookAt(0, aim, 0)
     perspective.updateProjectionMatrix()
-  }, [camera, size, width, height])
+  }, [camera, size, width, height, reserve])
 
   return null
 }
@@ -70,7 +96,13 @@ function SweepLight({ active }: { active: boolean }) {
   return <pointLight ref={light} color="#ffd9a8" distance={38} decay={1.6} />
 }
 
-function Stage({ pointer }: { pointer: React.RefObject<THREE.Vector2> }) {
+function Stage({
+  pointer,
+  reserve,
+}: {
+  pointer: React.RefObject<THREE.Vector2>
+  reserve: HeroReserve
+}) {
   const quality = useQuality()
   const { size } = useThree()
   const narrow = size.width / size.height < 0.85
@@ -82,7 +114,11 @@ function Stage({ pointer }: { pointer: React.RefObject<THREE.Vector2> }) {
 
   return (
     <>
-      <FitCamera width={sample?.width ?? WORD_WIDTH} height={sample?.height ?? 2} />
+      <FitCamera
+        width={sample?.width ?? WORD_WIDTH}
+        height={sample?.height ?? 2}
+        reserve={reserve}
+      />
 
       <color attach="background" args={['#14100c']} />
 
@@ -111,7 +147,7 @@ function Stage({ pointer }: { pointer: React.RefObject<THREE.Vector2> }) {
   )
 }
 
-export function HeroScene() {
+export function HeroScene({ reserve }: { reserve: HeroReserve }) {
   const quality = useQuality()
   const pointer = useRef(new THREE.Vector2(0, 0))
   const { ref: host, visible } = useInViewport<HTMLDivElement>()
@@ -143,7 +179,7 @@ export function HeroScene() {
           }
         }}
       >
-        <Stage pointer={pointer} />
+        <Stage pointer={pointer} reserve={reserve} />
       </Canvas>
     </div>
   )

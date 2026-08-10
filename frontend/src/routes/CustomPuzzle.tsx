@@ -86,7 +86,8 @@ export function CustomPuzzle() {
         <div className="rule-line my-12" />
 
         <div className="grid gap-12 md:grid-cols-12 md:gap-10">
-          <div className="md:col-span-7">
+          {/* min-w-0 so the 3D canvas cannot hold the column open. */}
+          <div className="min-w-0 md:col-span-7">
             <div className="relative aspect-square overflow-hidden rounded-sm bg-gradient-to-b from-ink-soft to-ink">
               {faces ? (
                 <>

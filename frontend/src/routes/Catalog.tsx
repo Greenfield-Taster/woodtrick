@@ -25,6 +25,7 @@ export function Catalog() {
   const [sort, setSort] = useState<SortKey>('featured')
   const [maxUsd, setMaxUsd] = useState(140)
   const [sizes, setSizes] = useState<SizeKey[]>([])
+  const [filtersOpen, setFiltersOpen] = useState(false)
 
   const currency = useCart((s) => s.currency)
   const collection = params.get('collection') as CollectionId | null
@@ -71,6 +72,7 @@ export function Catalog() {
   }, [collection, maxUsd, sizes, sort])
 
   const active = COLLECTIONS.find((c) => c.id === collection)
+  const narrowed = (collection ? 1 : 0) + sizes.length + (maxUsd < 140 ? 1 : 0)
 
   return (
     <div className="container-page pt-28 pb-24 md:pt-36">
@@ -109,7 +111,26 @@ export function Catalog() {
 
       <div className="grid gap-12 md:grid-cols-12">
         <aside className="md:col-span-3">
-          <div className="md:sticky md:top-28">
+          {/* On a phone the whole filter column would stand between the
+              visitor and the first puzzle, so it folds away until asked for. */}
+          <button
+            type="button"
+            onClick={() => setFiltersOpen((open) => !open)}
+            aria-expanded={filtersOpen}
+            className="flex w-full items-center justify-between border-y border-ink-line py-3.5 text-sm text-paper md:hidden"
+          >
+            <span>Filter and sort</span>
+            <span className="text-paper/40">
+              {filtersOpen ? 'Hide' : narrowed > 0 ? `${narrowed} applied` : 'Show'}
+            </span>
+          </button>
+
+          <div
+            className={[
+              filtersOpen ? 'block' : 'hidden',
+              'pt-8 md:block md:pt-0 md:sticky md:top-28',
+            ].join(' ')}
+          >
             <h2 className="eyebrow">Collection</h2>
             <ul className="mt-4 space-y-1.5">
               <li>

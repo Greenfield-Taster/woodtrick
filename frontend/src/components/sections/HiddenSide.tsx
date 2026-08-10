@@ -36,7 +36,7 @@ export function HiddenSide() {
             </p>
           </div>
 
-          <div className="order-1 md:order-2 md:col-span-6 md:col-start-7">
+          <div className="order-1 min-w-0 md:order-2 md:col-span-6 md:col-start-7">
             <div className="aspect-square w-full rounded-sm bg-gradient-to-b from-ink-soft to-ink">
               <FlipPiece front={front} back={back} progress={progress} />
             </div>
