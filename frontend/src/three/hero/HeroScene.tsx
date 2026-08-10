@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef } from 'react'
 import { Canvas, useFrame, useThree } from '@react-three/fiber'
 import * as THREE from 'three'
 import { useQuality } from '../shared/quality'
+import { useInViewport } from '../../lib/useInViewport'
 import { useWordmarkPoints } from './useWordmarkPoints'
 import { PieceField } from './PieceField'
 
@@ -113,7 +114,7 @@ function Stage({ pointer }: { pointer: React.RefObject<THREE.Vector2> }) {
 export function HeroScene() {
   const quality = useQuality()
   const pointer = useRef(new THREE.Vector2(0, 0))
-  const host = useRef<HTMLDivElement>(null)
+  const { ref: host, visible } = useInViewport<HTMLDivElement>()
 
   const onPointerMove = useMemo(
     () => (event: React.PointerEvent<HTMLDivElement>) => {
@@ -130,6 +131,7 @@ export function HeroScene() {
   return (
     <div ref={host} className="absolute inset-0" onPointerMove={onPointerMove}>
       <Canvas
+        frameloop={visible ? 'always' : 'never'}
         dpr={quality.dpr}
         shadows={quality.shadows}
         camera={{ fov: 38, near: 0.1, far: 100, position: [0, 0, 14] }}

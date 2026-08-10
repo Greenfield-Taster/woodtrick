@@ -4,6 +4,7 @@ import * as THREE from 'three'
 import type { Artwork } from '../../data/catalog'
 import { artworkCanvas } from '../../art/artwork'
 import { artworkPieceMaterials } from '../piece/woodMaterial'
+import { useInViewport } from '../../lib/useInViewport'
 import { assemblePuzzle, previewGrid } from './assemble'
 
 interface PuzzleViewProps {
@@ -83,17 +84,22 @@ function Panel({ front, back, pieces, flipped }: PuzzleViewProps) {
 }
 
 export function PuzzleView(props: PuzzleViewProps) {
+  const { ref, visible } = useInViewport<HTMLDivElement>()
+
   return (
-    <Canvas
-      dpr={[1, 2]}
-      camera={{ fov: 32, position: [0, 0, 8] }}
-      gl={{ antialias: true }}
-      style={{ cursor: 'grab', touchAction: 'none' }}
-    >
-      <ambientLight intensity={0.55} color="#f5e6d2" />
-      <directionalLight position={[4, 6, 7]} intensity={2.3} color="#ffe8c8" />
-      <directionalLight position={[-6, -2, -5]} intensity={1.2} color="#7c93c6" />
-      <Panel {...props} />
-    </Canvas>
+    <div ref={ref} className="h-full w-full">
+      <Canvas
+        frameloop={visible ? 'always' : 'never'}
+        dpr={[1, 2]}
+        camera={{ fov: 32, position: [0, 0, 8] }}
+        gl={{ antialias: true }}
+        style={{ cursor: 'grab', touchAction: 'none' }}
+      >
+        <ambientLight intensity={0.55} color="#f5e6d2" />
+        <directionalLight position={[4, 6, 7]} intensity={2.3} color="#ffe8c8" />
+        <directionalLight position={[-6, -2, -5]} intensity={1.2} color="#7c93c6" />
+        <Panel {...props} />
+      </Canvas>
+    </div>
   )
 }

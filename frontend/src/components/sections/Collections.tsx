@@ -44,11 +44,13 @@ export function Collections() {
                   ].join(' ')}
                 >
                   {lead ? (
-                    <ArtworkImage
-                      artwork={lead.artwork}
-                      ratio={index % 3 === 1 ? 4 / 5 : 1}
-                      className="h-full w-full object-cover opacity-90 transition-all duration-[900ms] ease-[cubic-bezier(0.16,1,0.3,1)] group-hover:scale-105 group-hover:opacity-100"
-                    />
+                    <div className="h-full w-full opacity-90 transition-all duration-[900ms] ease-[cubic-bezier(0.16,1,0.3,1)] will-change-transform group-hover:scale-105 group-hover:opacity-100">
+                      <ArtworkImage
+                        artwork={lead.artwork}
+                        ratio={index % 3 === 1 ? 4 / 5 : 1}
+                        className="h-full w-full object-cover"
+                      />
+                    </div>
                   ) : null}
 
                   <div className="absolute inset-0 bg-gradient-to-t from-ink/85 via-ink/10 to-transparent" />

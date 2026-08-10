@@ -3,6 +3,7 @@ import { Canvas, useFrame } from '@react-three/fiber'
 import * as THREE from 'three'
 import type { Artwork } from '../../data/catalog'
 import { artworkCanvas } from '../../art/artwork'
+import { useInViewport } from '../../lib/useInViewport'
 import { buildPuzzle } from './geometry'
 import { artworkPieceMaterials } from './woodMaterial'
 
@@ -61,17 +62,21 @@ function Piece({ front, back, progress }: FlipPieceProps) {
 }
 
 export function FlipPiece({ front, back, progress }: FlipPieceProps) {
+  const { ref, visible } = useInViewport<HTMLDivElement>()
+
   return (
-    <Canvas
-      dpr={[1, 2]}
-      camera={{ fov: 34, position: [0, 0, 7] }}
-      gl={{ antialias: true }}
-      frameloop="always"
-    >
-      <ambientLight intensity={0.5} color="#f3e2cb" />
-      <directionalLight position={[4, 5, 6]} intensity={2.4} color="#ffe9cb" />
-      <directionalLight position={[-5, -1, -4]} intensity={1.1} color="#7f96c4" />
-      <Piece front={front} back={back} progress={progress} />
-    </Canvas>
+    <div ref={ref} className="h-full w-full">
+      <Canvas
+        dpr={[1, 2]}
+        camera={{ fov: 34, position: [0, 0, 7] }}
+        gl={{ antialias: true }}
+        frameloop={visible ? 'always' : 'never'}
+      >
+        <ambientLight intensity={0.5} color="#f3e2cb" />
+        <directionalLight position={[4, 5, 6]} intensity={2.4} color="#ffe9cb" />
+        <directionalLight position={[-5, -1, -4]} intensity={1.1} color="#7f96c4" />
+        <Piece front={front} back={back} progress={progress} />
+      </Canvas>
+    </div>
   )
 }
