@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef } from 'react'
+import { useCallback, useEffect, useRef } from 'react'
 import { Canvas, useFrame, useThree } from '@react-three/fiber'
 import * as THREE from 'three'
 import { useQuality } from '../shared/quality'
@@ -160,8 +160,8 @@ export function HeroScene({ reserve }: { reserve: HeroReserve }) {
   const pointer = useRef(new THREE.Vector2(0, 0))
   const { ref: host, visible } = useInViewport<HTMLDivElement>()
 
-  const onPointerMove = useMemo(
-    () => (event: React.PointerEvent<HTMLDivElement>) => {
+  const onPointerMove = useCallback(
+    (event: React.PointerEvent<HTMLDivElement>) => {
       const rect = host.current?.getBoundingClientRect()
       if (!rect) return
       pointer.current.set(
@@ -169,7 +169,7 @@ export function HeroScene({ reserve }: { reserve: HeroReserve }) {
         -(((event.clientY - rect.top) / rect.height) * 2 - 1),
       )
     },
-    [],
+    [host],
   )
 
   return (

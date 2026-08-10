@@ -17,7 +17,15 @@ export function ProductPage() {
 
   const back = useMemo(() => (product ? reverseArtwork(product.artwork) : null), [product])
 
-  if (!product || !back) {
+  const faces = useMemo(
+    () =>
+      product && back
+        ? { front: artworkCanvas(product.artwork, 1400), back: artworkCanvas(back, 1400) }
+        : null,
+    [product, back],
+  )
+
+  if (!product || !back || !faces) {
     return (
       <div className="container-page pt-40 pb-32">
         <h1 className="text-4xl">That design is not in the catalogue.</h1>
@@ -54,8 +62,8 @@ export function ProductPage() {
           <div className="min-w-0 md:col-span-7">
             <div className="relative aspect-square overflow-hidden rounded-sm bg-gradient-to-b from-ink-soft to-ink">
               <PuzzleView
-                front={artworkCanvas(product.artwork, 1400)}
-                back={artworkCanvas(back, 1400)}
+                front={faces.front}
+                back={faces.back}
                 pieces={size.pieces}
                 flipped={flipped}
               />
