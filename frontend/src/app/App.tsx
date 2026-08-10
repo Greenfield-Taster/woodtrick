@@ -1,4 +1,5 @@
 import { BrowserRouter, Route, Routes } from 'react-router-dom'
+import { ScrollToTop } from './ScrollToTop'
 import { Header } from '../components/layout/Header'
 import { Footer } from '../components/layout/Footer'
 import { CartDrawer } from '../components/cart/CartDrawer'
@@ -15,6 +16,7 @@ export function App() {
 
   return (
     <BrowserRouter>
+      <ScrollToTop />
       <Header />
       <main>
         <Routes>

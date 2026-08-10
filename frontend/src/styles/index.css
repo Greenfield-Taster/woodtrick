@@ -142,6 +142,15 @@
   color: color-mix(in oklab, var(--color-birch) 70%, transparent);
 }
 
+/* A rail you drag has no use for a scrollbar. */
+@utility no-scrollbar {
+  scrollbar-width: none;
+
+  &::-webkit-scrollbar {
+    display: none;
+  }
+}
+
 @utility rule-line {
   height: 1px;
   background: linear-gradient(

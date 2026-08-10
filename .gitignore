@@ -408,3 +408,6 @@ FodyWeavers.xsd
 # Build sentinels (local machine state only, recreated by build; safe to delete with git clean -fdx)
 .config/.codegraph-initialized
 .config/.tools-restored
+
+# Playwright MCP run artifacts
+.playwright-mcp/

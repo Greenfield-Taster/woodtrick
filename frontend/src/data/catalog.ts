@@ -302,6 +302,53 @@ export const PRODUCTS: Product[] = [
     artwork: { kind: 'strata', seed: 33, bands: 11, palette: NIGHT },
     sizes: sizes(26),
   },
+
+  {
+    id: 'gift-evergreen',
+    slug: 'evergreen',
+    name: 'Evergreen',
+    collection: 'gifts',
+    tagline: 'The one we send when nobody knows what to send',
+    story:
+      'Twelve-fold and green, with no occasion attached to it. It is the design that goes out most often with a note rather than a name on it.',
+    artwork: { kind: 'mandala', seed: 88, symmetry: 12, rings: 5, palette: MOSS },
+    sizes: sizes(32),
+    bestseller: true,
+  },
+  {
+    id: 'gift-hearth',
+    slug: 'hearth',
+    name: 'Hearth',
+    collection: 'gifts',
+    tagline: 'Warm enough to hand over in December',
+    story:
+      'Low light over a long horizon, cut in the reddest ply we stock. Arrives in the gift box with the sleeve already on it.',
+    artwork: { kind: 'strata', seed: 61, bands: 8, palette: CLAY },
+    sizes: sizes(30),
+  },
+  {
+    id: 'gift-two-wings',
+    slug: 'two-wings',
+    name: 'Two Wings',
+    collection: 'gifts',
+    tagline: 'A second edition of Paper Wing, cut in sage',
+    story:
+      'The same mirror-cut wings in a quieter palette. People who already own one tend to buy this as the pair to it.',
+    artwork: { kind: 'marquetry', figure: 'butterfly', palette: SAGE },
+    sizes: sizes(27),
+    isNew: true,
+  },
+  {
+    id: 'gift-first-light',
+    slug: 'first-light',
+    name: 'First Light',
+    collection: 'gifts',
+    tagline: 'For new homes and new starts',
+    story:
+      'A sunrise pattern on a ten-fold frame. The centre is a single amber piece, which is the one people hand to whoever they are giving it to.',
+    artwork: { kind: 'mandala', seed: 104, symmetry: 10, rings: 6, palette: EMBER },
+    sizes: sizes(33),
+  },
 ]
 
 export const CURRENCIES = {
