@@ -13,8 +13,8 @@ giving up what the dark design was built to do.
 ### Non-goals
 
 - No third theme, no per-section theme picker, no user accounts to sync a choice.
-- No relighting of the 3D scenes. They stay dark in both themes (see §3).
 - No renaming of the existing colour tokens (see §2).
+- Not fixing the muted-text contrast the site already had (see §6).
 
 ## 2. Theme as a scope, not a global flag
 
@@ -58,32 +58,38 @@ of which is a claim about darkness.
 `birch`, `oak`, `walnut` and `moss` keep their values in both themes: they are
 material colours, not interface colours.
 
-## 3. The scenes stay dark
+## 3. The scenes follow the page, and the wood follows the scene
 
-The three WebGL surfaces keep their warm near-black stage in both themes. Wood is
-a mid-tone; on cream it loses the contrast the wordmark fix just bought, and
-relighting three scenes is a larger job than the theme itself.
+The stage was first specified as staying dark in both themes, on the grounds that
+wood is a mid-tone and loses its contrast on cream. Seen built, a dark band across
+a light page was not what the light theme should be, so the stage now follows the
+page — and the contrast problem is answered by changing the wood rather than by
+keeping the ground dark.
 
-On a light page these become dark bands, which is a display case rather than an
-accident. The sections carrying them declare `data-theme="dark"` so everything
-inside — copy, buttons, the fade into the copy — follows the stage rather than the
-page:
+Oak on cream is about 1.6:1, which is the wordmark failure this repo has just
+finished fixing, arrived at from the other side. Walnut on cream is about 6:1,
+which is roughly the contrast oak had against the near-black. So:
 
-- the hero section,
-- the hidden-side section,
-- the 3D viewer panel on the product page (the rest of that page follows the page
-  theme).
+| | dark stage | light stage |
+|---|---|---|
+| ground | `#14100C` | `#F3ECE1` |
+| wood | oak | walnut |
+| fill | low — the dark ground swallows spill | higher — cream bounces light back |
+| rim | cold blue, to lift wood off the dark | warm and faint; blue on cream reads as a printing error |
+| sweep | strong | quiet; on cream it is read from shadow, not from glare |
 
-**Accepted consequence:** the hero fills the viewport, so on the home page the
-light theme only becomes visible once the visitor scrolls.
+Both are held in one `STAGE` table in `HeroScene`, and the hero passes the tone
+down to the piece field. The two artwork viewers — the hidden-side panel and the
+product page's — are transparent canvases over a CSS panel, so they follow the
+theme with no scene changes at all.
+
+Nothing declares `data-theme` any more: the page theme is the only theme.
 
 ### The header
 
 The header is fixed and transparent until 24px of scroll, at which point it takes
-`bg-ink/85`. On the home page at rest it therefore overlays the dark hero and must
-keep light lettering; everywhere else it overlays the page ground. It declares
-`data-theme="dark"` exactly when `!lifted && pathname === '/'`, and otherwise
-inherits.
+`bg-ink/85`. Since the hero now shares the page's ground, the header's own colours
+are correct at every scroll position without special-casing the home page.
 
 ## 4. Accent contrast
 
@@ -121,11 +127,26 @@ pill, the active one taking `bg-paper text-ink`. Sun and moon glyphs with
 accessible labels. It sits next to the currency toggle in the header on desktop,
 and beside currency in the mobile menu on a phone.
 
-## 6. Verification
+## 6. Verification, and one thing left open
 
-- Contrast computed with a script, not judged by eye, over the pairs that actually
-  carry the risk: muted text (`text-paper/40`, `/45`, `/55` — 40+ uses between
-  them), `ink-line` borders, and the accent on both grounds.
+- Contrast computed by painting each colour into a canvas and reading the pixels
+  back, rather than parsing the computed string: Tailwind emits opacity variants
+  as `oklab(… / …)`, and a naive parser reads those three numbers as RGB and
+  reports confident nonsense.
 - Both themes screenshotted on every route at 375px and 1440px.
 - Switching theme must not tear down and rebuild a canvas.
 - `prefers-reduced-motion` unaffected.
+
+### Muted text is under 4.5:1, in both themes
+
+Measured across all four routes, secondary text set with the low opacity steps —
+`text-paper/35`, `/40`, `/45`, `/55` — lands between 2.1:1 and 4.0:1 in the light
+theme and between 2.9:1 and 4.0:1 in the dark one. The light theme is therefore
+close to parity with what the site already did, not a regression.
+
+It cannot be fixed by choosing better token values: 45% of pure black over this
+cream is about 2.5:1, so no `--color-paper` reaches 4.5:1 at that opacity. The fix
+is to stop asking for small text at those opacities — roughly 40 call sites moving
+from `/45` to about `/70` — which changes the deliberate quietness of the existing
+dark design and so is a decision to take on its own, not a side effect of adding a
+theme.

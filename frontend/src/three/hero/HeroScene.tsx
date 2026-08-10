@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef } from 'react'
 import { Canvas, useFrame, useThree } from '@react-three/fiber'
 import * as THREE from 'three'
 import { useQuality } from '../shared/quality'
+import { useTheme } from '../../store/theme'
 import { useInViewport } from '../../lib/useInViewport'
 import { useWordmarkPoints } from './useWordmarkPoints'
 import { PieceField } from './PieceField'
@@ -13,6 +14,38 @@ import { PieceField } from './PieceField'
 const WIDE_LINES = ['UNIDRAGON']
 const NARROW_LINES = ['UNI', 'DRAGON']
 const WORD_WIDTH = 12
+
+/**
+ * The stage follows the page, and the wood has to follow the stage.
+ *
+ * A word made of oak reads at roughly 1.6:1 against cream — the same failure,
+ * arrived at from the other direction, that cutting the pieces to the letters
+ * was meant to end. Walnut against cream is about 6:1, which is the contrast
+ * the birch had against the near-black. So the light stage is cut from the dark
+ * wood, and the dark stage from the light one.
+ */
+const STAGE = {
+  dark: {
+    background: '#14100c',
+    tone: 'oak',
+    ambient: { intensity: 0.35, color: '#f0d9bd' },
+    key: { intensity: 2.1, color: '#ffe6c4' },
+    // A cold rim from behind keeps the wood off the dark ground.
+    rim: { intensity: 0.9, color: '#6d86b8' },
+    sweep: { base: 12, peak: 30, rest: 34 },
+  },
+  light: {
+    background: '#f3ece1',
+    tone: 'walnut',
+    // Cream bounces light back into everything, so the fill comes down and the
+    // key stays hard: on this ground the letters are read from their shadows.
+    ambient: { intensity: 0.72, color: '#fff4e4' },
+    key: { intensity: 2.6, color: '#fff1da' },
+    // Warm, not cold: a blue rim on cream reads as a printing error.
+    rim: { intensity: 0.35, color: '#c9a887' },
+    sweep: { base: 4, peak: 12, rest: 10 },
+  },
+} as const
 
 export interface HeroReserve {
   /** Share of the section's height taken by the header above, 0..1. */
@@ -72,7 +105,13 @@ function FitCamera({ width, height, reserve }: FitCameraProps) {
  * A hard light that travels across the word once the pieces land, so the grain
  * lights up left to right. Cheaper and more physical than a shader sweep.
  */
-function SweepLight({ active }: { active: boolean }) {
+function SweepLight({
+  active,
+  sweep,
+}: {
+  active: boolean
+  sweep: { base: number; peak: number; rest: number }
+}) {
   const light = useRef<THREE.PointLight>(null)
   const started = useRef<number | null>(null)
 
@@ -83,7 +122,7 @@ function SweepLight({ active }: { active: boolean }) {
 
     if (!active) {
       light.current.position.set(2, 3, 6)
-      light.current.intensity = 34
+      light.current.intensity = sweep.rest
       return
     }
 
@@ -91,11 +130,11 @@ function SweepLight({ active }: { active: boolean }) {
     if (u >= 1) {
       // Parks in front of the word so the wood keeps its warmth afterwards.
       light.current.position.set(2, 3, 6)
-      light.current.intensity = 34
+      light.current.intensity = sweep.rest
       return
     }
     light.current.position.set(-11 + u * 22, 2.4, 4.2)
-    light.current.intensity = 12 + 30 * Math.sin(u * Math.PI)
+    light.current.intensity = sweep.base + sweep.peak * Math.sin(u * Math.PI)
   })
 
   return <pointLight ref={light} color="#ffd9a8" distance={38} decay={1.6} />
@@ -109,6 +148,8 @@ function Stage({
   reserve: HeroReserve
 }) {
   const quality = useQuality()
+  const theme = useTheme((s) => s.theme)
+  const stage = STAGE[theme]
   const { size } = useThree()
   const narrow = size.width / size.height < 0.85
   const sample = useWordmarkPoints(
@@ -125,23 +166,23 @@ function Stage({
         reserve={reserve}
       />
 
-      <color attach="background" args={['#14100c']} />
+      <color attach="background" args={[stage.background]} />
 
-      <ambientLight intensity={0.35} color="#f0d9bd" />
+      <ambientLight intensity={stage.ambient.intensity} color={stage.ambient.color} />
       <directionalLight
         position={[5, 7, 8]}
-        intensity={2.1}
-        color="#ffe6c4"
+        intensity={stage.key.intensity}
+        color={stage.key.color}
         castShadow={quality.shadows}
         shadow-mapSize={[1024, 1024]}
         shadow-bias={-0.0006}
       />
-      {/* Cold rim from behind keeps the wood from going flat against the dark. */}
-      <directionalLight position={[-6, -2, -6]} intensity={0.9} color="#6d86b8" />
-      <SweepLight active={quality.animate} />
+      <directionalLight position={[-6, -2, -6]} intensity={stage.rim.intensity} color={stage.rim.color} />
+      <SweepLight active={quality.animate} sweep={stage.sweep} />
 
       {sample && sample.points.length > 0 && (
         <PieceField
+          tone={stage.tone}
           sample={sample}
           // Every sampled cell gets a piece. Thinning the field to a budget
           // here would punch holes back into the letters the sampler just

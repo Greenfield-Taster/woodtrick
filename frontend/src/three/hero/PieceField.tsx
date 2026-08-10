@@ -3,7 +3,7 @@ import { useFrame } from '@react-three/fiber'
 import * as THREE from 'three'
 import { buildEdgeVariants, disposeGeometries, EDGE_VARIANTS } from '../piece/geometry'
 import { edgesAt, variantOf } from '../piece/outline'
-import { woodPieceMaterials } from '../piece/woodMaterial'
+import { woodPieceMaterials, type WoodTone } from '../piece/woodMaterial'
 import type { WordmarkSample } from './useWordmarkPoints'
 
 const INTRO_STAGGER = 0.8
@@ -40,11 +40,13 @@ export interface PieceFieldProps {
   animate: boolean
   /** Normalised pointer, -1..1 on both axes. */
   pointer: React.RefObject<THREE.Vector2>
+  /** Which wood the letters are cut from — the stage decides. */
+  tone: WoodTone
   /** Reports intro progress 0..1 so the DOM copy can follow the pieces in. */
   onProgress?: (progress: number) => void
 }
 
-export function PieceField({ sample, count, animate, pointer, onProgress }: PieceFieldProps) {
+export function PieceField({ sample, count, animate, pointer, tone, onProgress }: PieceFieldProps) {
   const group = useRef<THREE.Group>(null)
   const meshes = useRef<Array<THREE.InstancedMesh | null>>([])
   const startedAt = useRef<number | null>(null)
@@ -52,14 +54,13 @@ export function PieceField({ sample, count, animate, pointer, onProgress }: Piec
   const flip = useRef({ index: -1, at: 0 })
 
   const geometries = useMemo(() => buildEdgeVariants(4211), [])
-  const wood = useMemo(() => woodPieceMaterials('oak'), [])
+  const wood = useMemo(() => woodPieceMaterials(tone), [tone])
 
-  useEffect(() => {
-    return () => {
-      disposeGeometries(geometries)
-      wood.dispose()
-    }
-  }, [geometries, wood])
+  // Two effects, not one: the wood is rebuilt whenever the stage changes tone,
+  // and a shared cleanup would take the geometries down with it while they are
+  // still on screen.
+  useEffect(() => () => disposeGeometries(geometries), [geometries])
+  useEffect(() => () => wood.dispose(), [wood])
 
   const { pieces, buckets, scale } = useMemo(() => {
     const points = sample.points

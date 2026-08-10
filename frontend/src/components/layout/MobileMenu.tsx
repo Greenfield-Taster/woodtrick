@@ -2,6 +2,7 @@ import { useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import { COLLECTIONS } from '../../data/catalog'
 import { useCart } from '../../store/cart'
+import { ThemeToggle } from './ThemeToggle'
 
 interface MobileMenuProps {
   open: boolean
@@ -108,6 +109,11 @@ export function MobileMenu({ open, onClose, links }: MobileMenuProps) {
                 </button>
               ))}
             </div>
+          </div>
+
+          <div className="mt-4 flex items-center justify-between">
+            <span className="text-sm text-paper/45">Theme</span>
+            <ThemeToggle />
           </div>
         </div>
       </nav>

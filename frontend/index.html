@@ -10,6 +10,29 @@
       content="Laser-cut wooden puzzles where no two pieces are alike and every piece hides a second picture on its back."
     />
     <title>Unidragon — Wooden puzzles, cut one piece at a time</title>
+
+    <!--
+      Blocking on purpose. The theme has to be on the document element before
+      the first paint, or every visitor whose theme is not the default sees the
+      other one flash first.
+    -->
+    <script>
+      ;(function () {
+        var theme
+        try {
+          theme = localStorage.getItem('unidragon-theme')
+        } catch (e) {
+          // Storage can be denied outright. Fall through to the system.
+        }
+        if (theme !== 'light' && theme !== 'dark') {
+          theme = window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark'
+        }
+        document.documentElement.dataset.theme = theme
+        if (theme === 'light') {
+          document.querySelector('meta[name="theme-color"]').content = '#F3ECE1'
+        }
+      })()
+    </script>
   </head>
   <body>
     <div id="root"></div>

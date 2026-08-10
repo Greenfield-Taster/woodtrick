@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { Link, NavLink, useLocation } from 'react-router-dom'
 import { countItems, useCart } from '../../store/cart'
 import { MobileMenu } from './MobileMenu'
+import { ThemeToggle } from './ThemeToggle'
 
 // Two destinations, not six. The collections are one click into the shop and
 // they are listed in the footer; Sizes pointed back at the home page, which is
@@ -66,6 +67,8 @@ export function Header() {
           </nav>
 
           <div className="flex items-center gap-2 md:gap-3">
+            <ThemeToggle className="hidden sm:flex" />
+
             <div className="hidden items-center rounded-full border border-ink-line p-0.5 sm:flex">
               {(['USD', 'EUR'] as const).map((code) => (
                 <button

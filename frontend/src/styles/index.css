@@ -4,16 +4,24 @@
 @import '@fontsource-variable/inter-tight/index.css';
 
 @theme {
-  /* Surfaces — warm near-blacks, never neutral grey. */
+  /*
+   * `ink` is whatever the page is standing on and `paper` is whatever reads
+   * against it. Neither name is a claim about darkness: in the light theme
+   * `ink` holds the cream and `paper` holds the near-black. Every value below
+   * is the dark theme's; both themes are set out under `[data-theme]` further
+   * down, and that is what these are overridden by.
+   */
   --color-ink: #14100c;
   --color-ink-soft: #221b15;
   --color-ink-line: #33291f;
 
-  /* Light ground for the paper sections. */
   --color-paper: #f3ece1;
   --color-paper-soft: #e7dccd;
 
-  /* Wood is the only product colour. */
+  /* Eyebrow labels: the quietest wood that still reads on the ground. */
+  --color-quiet: #e0c398;
+
+  /* Wood is the only product colour, and it is the same wood in both themes. */
   --color-birch: #e0c398;
   --color-oak: #c39a63;
   --color-walnut: #7a4e28;
@@ -38,10 +46,60 @@
  */
 @custom-variant short (@media (height <= 34rem));
 
+/*
+ * Both palettes hang off an attribute rather than the root alone, so that any
+ * subtree can declare the theme it is actually sitting on. That is how the 3D
+ * stages stay dark on a light page without a single component having to know
+ * which theme is running.
+ */
+[data-theme='dark'] {
+  color-scheme: dark;
+
+  --color-ink: #14100c;
+  --color-ink-soft: #221b15;
+  --color-ink-line: #33291f;
+
+  --color-paper: #f3ece1;
+  --color-paper-soft: #e7dccd;
+
+  --color-quiet: #e0c398;
+
+  --color-ember: #d8602c;
+  --color-ember-soft: #ea7a49;
+}
+
+[data-theme='light'] {
+  color-scheme: light;
+
+  --color-ink: #f3ece1;
+  --color-ink-soft: #e7dccd;
+  --color-ink-line: #dacbb5;
+
+  --color-paper: #241c14;
+  --color-paper-soft: #3a2e22;
+
+  /* Birch disappears on cream; the eyebrow needs the darker wood here. */
+  --color-quiet: #7a4e28;
+
+  /*
+   * Overlay noise on cream reads as dirt rather than grain, because it lightens
+   * as much as it darkens. Multiplying only darkens, which is the tooth of the
+   * paper.
+   */
+  --grain-blend: multiply;
+  --grain-opacity: 0.14;
+
+  /*
+   * The accent darkens rather than changing hue. At #d8602c it reads 3.3:1 on
+   * cream, which is short of what a price or a small label needs. Darkening it
+   * also keeps `bg-ember` correct with `text-ink`, since `ink` flips too: cream
+   * on this is ~5.5:1, where near-black on it would have been ~2.9:1.
+   */
+  --color-ember: #b4491c;
+  --color-ember-soft: #9c3d14;
+}
+
 @layer base {
-  :root {
-    color-scheme: dark;
-  }
 
   html {
     scroll-behavior: smooth;
@@ -133,8 +191,8 @@
     position: absolute;
     inset: 0;
     pointer-events: none;
-    opacity: 0.35;
-    mix-blend-mode: overlay;
+    opacity: var(--grain-opacity, 0.35);
+    mix-blend-mode: var(--grain-blend, overlay);
     background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='3'/%3E%3C/filter%3E%3Crect width='160' height='160' filter='url(%23n)' opacity='0.5'/%3E%3C/svg%3E");
   }
 }
@@ -146,7 +204,7 @@
   font-weight: 500;
   letter-spacing: 0.22em;
   text-transform: uppercase;
-  color: color-mix(in oklab, var(--color-birch) 70%, transparent);
+  color: color-mix(in oklab, var(--color-quiet) 70%, transparent);
 }
 
 /* A rail you drag has no use for a scrollbar. */
