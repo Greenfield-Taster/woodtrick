@@ -38,9 +38,9 @@ function fitBox(w: number, h: number): Mapper {
  * rather than the palette's dark tone: the product is wood, and a dark ground
  * makes each puzzle read as a black rectangle with a shape floating on it.
  */
-const PLY_TONES = ['#dcbe93', '#d3b184', '#e2c8a1']
+export const PLY_TONES = ['#dcbe93', '#d3b184', '#e2c8a1']
 
-function drawPlywood(ctx: CanvasRenderingContext2D, w: number, h: number, tone: string) {
+export function drawPlywood(ctx: CanvasRenderingContext2D, w: number, h: number, tone: string) {
   ctx.fillStyle = tone
   ctx.fillRect(0, 0, w, h)
 

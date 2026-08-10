@@ -6,6 +6,7 @@ import { CartDrawer } from '../components/cart/CartDrawer'
 import { Home } from '../routes/Home'
 import { Catalog } from '../routes/Catalog'
 import { ProductPage } from '../routes/ProductPage'
+import { CustomPuzzle } from '../routes/CustomPuzzle'
 
 export function App() {
   // The hero animation only reads properly from the top of the page, so the
@@ -22,6 +23,7 @@ export function App() {
         <Routes>
           <Route path="/" element={<Home />} />
           <Route path="/shop" element={<Catalog />} />
+          <Route path="/custom" element={<CustomPuzzle />} />
           <Route path="/puzzle/:slug" element={<ProductPage />} />
           <Route path="*" element={<Home />} />
         </Routes>

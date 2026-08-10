@@ -1,17 +1,30 @@
 import { create } from 'zustand'
-import { CURRENCIES, PRODUCTS, type CurrencyCode, type Product, type SizeKey } from '../data/catalog'
+import {
+  CURRENCIES,
+  CUSTOM_ID_PREFIX,
+  CUSTOM_PUZZLE,
+  PRODUCTS,
+  type CurrencyCode,
+  type Product,
+  type SizeKey,
+} from '../data/catalog'
 
 export interface CartLine {
   productId: string
   size: SizeKey
   qty: number
+  /**
+   * A custom order's own picture. Catalogue lines paint their design from its
+   * recipe; a photograph has no recipe, so the line carries a small copy of it.
+   */
+  thumbnail?: string
 }
 
 interface CartState {
   lines: CartLine[]
   open: boolean
   currency: CurrencyCode
-  add(productId: string, size: SizeKey, qty?: number): void
+  add(productId: string, size: SizeKey, qty?: number, thumbnail?: string): void
   remove(productId: string, size: SizeKey): void
   setQty(productId: string, size: SizeKey, qty: number): void
   setOpen(open: boolean): void
@@ -23,12 +36,12 @@ export const useCart = create<CartState>((set) => ({
   open: false,
   currency: 'USD',
 
-  add: (productId, size, qty = 1) =>
+  add: (productId, size, qty = 1, thumbnail) =>
     set((state) => {
       const existing = state.lines.find((l) => l.productId === productId && l.size === size)
       const lines = existing
         ? state.lines.map((l) => (l === existing ? { ...l, qty: l.qty + qty } : l))
-        : [...state.lines, { productId, size, qty }]
+        : [...state.lines, { productId, size, qty, thumbnail }]
       return { lines, open: true }
     }),
 
@@ -56,7 +69,9 @@ export interface ResolvedLine extends CartLine {
 
 export function resolveLines(lines: CartLine[]): ResolvedLine[] {
   return lines.flatMap((line) => {
-    const product = PRODUCTS.find((p) => p.id === line.productId)
+    const product = line.productId.startsWith(CUSTOM_ID_PREFIX)
+      ? CUSTOM_PUZZLE
+      : PRODUCTS.find((p) => p.id === line.productId)
     const size = product?.sizes.find((s) => s.key === line.size)
     if (!product || !size) return []
     return [{ ...line, product, unitUsd: size.priceUsd, label: size.label }]

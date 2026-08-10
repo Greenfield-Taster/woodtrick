@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import { COLLECTIONS, PRODUCTS, productBySlug, type SizeKey } from '../data/catalog'
-import { reverseArtwork } from '../art/artwork'
+import { artworkCanvas, reverseArtwork } from '../art/artwork'
 import { PuzzleView } from '../three/product/PuzzleView'
 import { ProductCard } from '../components/ui/ProductCard'
 import { formatPrice, useCart } from '../store/cart'
@@ -54,8 +54,8 @@ export function ProductPage() {
           <div className="md:col-span-7">
             <div className="relative aspect-square overflow-hidden rounded-sm bg-gradient-to-b from-ink-soft to-ink">
               <PuzzleView
-                front={product.artwork}
-                back={back}
+                front={artworkCanvas(product.artwork, 1400)}
+                back={artworkCanvas(back, 1400)}
                 pieces={size.pieces}
                 flipped={flipped}
               />

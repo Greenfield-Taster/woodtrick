@@ -73,11 +73,15 @@ export function CartDrawer() {
               {resolved.map((line) => (
                 <li key={`${line.productId}-${line.size}`} className="flex gap-4 py-5">
                   <div className="h-20 w-20 shrink-0 overflow-hidden rounded-sm bg-ink">
-                    <ArtworkImage
-                      artwork={line.product.artwork}
-                      resolution={200}
-                      className="h-full w-full object-cover"
-                    />
+                    {line.thumbnail ? (
+                      <img src={line.thumbnail} alt="" className="h-full w-full object-cover" />
+                    ) : (
+                      <ArtworkImage
+                        artwork={line.product.artwork}
+                        resolution={200}
+                        className="h-full w-full object-cover"
+                      />
+                    )}
                   </div>
 
                   <div className="flex-1">

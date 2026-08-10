@@ -1,16 +1,19 @@
 import { useEffect, useMemo, useRef } from 'react'
 import { Canvas, useFrame } from '@react-three/fiber'
 import * as THREE from 'three'
-import type { Artwork } from '../../data/catalog'
-import { artworkCanvas } from '../../art/artwork'
 import { artworkPieceMaterials } from '../piece/woodMaterial'
 import { useInViewport } from '../../lib/useInViewport'
 import { useOrbitDrag } from '../../lib/useOrbitDrag'
 import { assemblePuzzle, previewGrid } from './assemble'
 
 interface PuzzleViewProps {
-  front: Artwork
-  back: Artwork
+  /**
+   * Painted faces rather than artwork recipes: a catalogue design and an
+   * uploaded photograph arrive here as the same thing, so both get this scene
+   * instead of one of them getting a second copy of it.
+   */
+  front: HTMLCanvasElement
+  back: HTMLCanvasElement
   /** Real piece count of the selected tier; drives how finely we cut. */
   pieces: number
   flipped: boolean
@@ -26,10 +29,7 @@ function Panel({ front, back, pieces, flipped, orbit }: PanelProps) {
   const { rows, cols } = previewGrid(pieces)
 
   const puzzle = useMemo(() => assemblePuzzle(rows, cols, 1301), [rows, cols])
-  const kit = useMemo(
-    () => artworkPieceMaterials(artworkCanvas(front, 1400), artworkCanvas(back, 1400)),
-    [front, back],
-  )
+  const kit = useMemo(() => artworkPieceMaterials(front, back), [front, back])
 
   useEffect(() => () => puzzle.dispose(), [puzzle])
   useEffect(() => () => kit.dispose(), [kit])

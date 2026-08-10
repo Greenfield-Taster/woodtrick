@@ -2,11 +2,12 @@ import { useEffect, useState } from 'react'
 import { Link, NavLink } from 'react-router-dom'
 import { countItems, useCart } from '../../store/cart'
 
+// Two destinations, not six. The collections are one click into the shop and
+// they are listed in the footer; Sizes pointed back at the home page, which is
+// what the logo is for.
 const NAV = [
   { to: '/shop', label: 'Shop' },
-  { to: '/shop?collection=mandalas', label: 'Mandalas' },
-  { to: '/shop?collection=animals', label: 'Animals' },
-  { to: '/#sizes', label: 'Sizes' },
+  { to: '/custom', label: 'Custom puzzle' },
 ]
 
 export function Header() {

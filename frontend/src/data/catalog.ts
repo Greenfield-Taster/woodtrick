@@ -351,6 +351,32 @@ export const PRODUCTS: Product[] = [
   },
 ]
 
+/**
+ * The one product that is not a design.
+ *
+ * Deliberately outside PRODUCTS: the shop is a catalogue of pictures to choose
+ * from, and this one has no picture until somebody brings theirs. It carries a
+ * recipe anyway so a line in the cart always has something to show, in the
+ * unlikely event it is added without one.
+ *
+ * The tiers match the catalogue piece for piece — the cut is the same, only
+ * the origin of the picture differs — and the premium is the plate.
+ */
+export const CUSTOM_PUZZLE: Product = {
+  id: 'custom',
+  slug: 'custom',
+  name: 'Custom puzzle',
+  collection: 'gifts',
+  tagline: 'Cut from a picture you bring',
+  story:
+    'The same birch, the same cut, the same box. The only difference is that the picture on it is yours.',
+  artwork: { kind: 'strata', seed: 7, bands: 9, palette: CLAY },
+  sizes: sizes(44),
+}
+
+/** Cart lines for custom orders are keyed off this, one id per uploaded picture. */
+export const CUSTOM_ID_PREFIX = 'custom-'
+
 export const CURRENCIES = {
   USD: { code: 'USD', symbol: '$', rate: 1, locale: 'en-US', freeShippingFrom: 49 },
   EUR: { code: 'EUR', symbol: '€', rate: 0.92, locale: 'de-DE', freeShippingFrom: 45 },
