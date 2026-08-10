@@ -10,9 +10,9 @@ export function Home() {
   return (
     <>
       <Hero />
-      <Reasons />
       <Collections />
       <Bestsellers />
+      <Reasons />
       <Sizes />
       <HiddenSide />
       <Trust />
