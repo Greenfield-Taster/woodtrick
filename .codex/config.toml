@@ -1,0 +1,58 @@
+[mcp_servers.aspire]
+command = "aspire"
+args = [
+    "agent",
+    "mcp",
+]
+
+[mcp_servers.codegraph]
+command = "cmd"
+args = [
+    "/c",
+    "npx",
+    "-y",
+    "@colbymchenry/codegraph",
+    "serve",
+    "--mcp",
+]
+
+[mcp_servers.context7]
+command = "cmd"
+args = [
+    "/c",
+    "npx",
+    "-y",
+    "@upstash/context7-mcp@latest",
+]
+
+[mcp_servers.microsoft-learn]
+url = "https://learn.microsoft.com/api/mcp"
+
+[mcp_servers.playwright]
+command = "cmd"
+args = [
+    "/c",
+    "npx",
+    "-y",
+    "@playwright/mcp",
+]
+
+[mcp_servers.threejs-devtools]
+command = "cmd"
+args = [
+    "/c",
+    "npx",
+    "-y",
+    "threejs-devtools-mcp@0.4.1",
+]
+
+[mcp_servers.stitch]
+command = "cmd"
+args = [
+    "/c",
+    "npx",
+    "-y",
+    "@_davideast/stitch-mcp",
+    "proxy",
+]
+env_vars = ["STITCH_API_KEY"]
