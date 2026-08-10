@@ -1,10 +1,5 @@
 import { useEffect, useRef } from 'react'
 
-/**
- * Reveals an element the first time it enters the viewport by flipping a data
- * attribute the `reveal` utility styles against. One observer per element, torn
- * down as soon as it has fired.
- */
 export function useReveal<T extends HTMLElement = HTMLDivElement>(rootMargin = '-12% 0px') {
   const ref = useRef<T>(null)
 
@@ -33,7 +28,6 @@ export function useReveal<T extends HTMLElement = HTMLDivElement>(rootMargin = '
   return ref
 }
 
-/** Reports how far the element has travelled through the viewport, 0..1. */
 export function useScrollProgress<T extends HTMLElement = HTMLDivElement>(
   onProgress: (progress: number) => void,
 ) {

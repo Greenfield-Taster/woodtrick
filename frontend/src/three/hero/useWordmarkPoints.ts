@@ -1,38 +1,15 @@
 import { useEffect, useState } from 'react'
 
 export interface WordmarkSample {
-  /** Target centres in world units, y up, centred on the origin. */
   points: Array<[number, number]>
-  /**
-   * Grid coordinates of each point, column and row, row counted downwards.
-   * Pieces need these to work out which of their neighbours exist and cut
-   * their edges to match.
-   */
   cells: Array<[number, number]>
-  /** Distance between neighbouring samples, in world units. */
   spacing: number
   width: number
   height: number
 }
 
-/**
- * How many pieces must cross the stem of a letter.
- *
- * This is the number legibility actually turns on. Below about three, a stem
- * lands on one grid column here and two there depending on where the grid
- * happens to fall, so the stroke wobbles, and a piece sitting on the inside
- * edge of a bowl reaches far enough across the counter to close it — which is
- * what turns G into Q and fills in A.
- */
 const PIECES_PER_STEM = 3
 
-/**
- * Turns a word into a point cloud by rasterising it and sampling the result.
- *
- * Sampling the real glyphs rather than hand-placing pieces means the lettering
- * stays exact at any viewport width and any piece count, and it lets the word
- * be changed by editing a string.
- */
 export function sampleWordmark(
   lines: string[],
   maxPieces: number,
@@ -51,10 +28,6 @@ export function sampleWordmark(
   ctx.textAlign = 'center'
   ctx.textBaseline = 'middle'
 
-  // Deliberately not the display serif. Rebuilding a word out of chunky pieces
-  // is a quantisation problem: high stroke contrast loses its thin strokes and
-  // blobs its thick ones. A heavy, even-weight grotesque survives it, and the
-  // wood does the character work the serif would have done.
   const setFont = (px: number) => {
     ctx.font = `900 ${px}px ${fontFamily}`
     ctx.letterSpacing = `${px * 0.02}px`
@@ -82,8 +55,6 @@ export function sampleWordmark(
   for (let i = 3; i < data.length; i += 4 * 4) if (data[i] > 128) filled++
   const inkArea = filled * 4
 
-  // Median width of a stem: horizontal runs of ink, with the long ones dropped
-  // so a crossbar is not counted as a stem.
   const runs: number[] = []
   for (let y = 0; y < H; y += 3) {
     let run = 0
@@ -99,18 +70,8 @@ export function sampleWordmark(
   runs.sort((a, b) => a - b)
   const stem = runs.length ? runs[runs.length >> 1] : 0
 
-  // The piece size comes from the letterform, and the count follows from it.
-  // Sizing pieces to hit a piece count instead is what made the word illegible
-  // on a phone: both the stem and the ink area scale with the font size, so
-  // pieces-per-stem depended only on the budget, never on the viewport, and the
-  // phone's smaller budget bought the same bad word at every width.
-  //
-  // The budget is a floor on the piece size, not a target. It only binds on a
-  // device too weak to draw the pieces the letters need.
   const step = Math.max(2, stem / PIECES_PER_STEM, Math.sqrt(inkArea / maxPieces))
 
-  // A cell is kept only if it is mostly inside the glyph. Testing the centre
-  // alone leaves ragged pieces hanging off every stem.
   const q = step * 0.3
   const centres: Array<[number, number]> = []
   const cells: Array<[number, number]> = []
@@ -136,8 +97,6 @@ export function sampleWordmark(
     ([x, y]) => [(x - W / 2) * scale, -(y - H / 2) * scale] as [number, number],
   )
 
-  // The camera frames what was actually inked, not the raster it was drawn on.
-  // Guessing the extent is what pushes long words off the side of a phone.
   const xs = points.map((p) => p[0])
   const ys = points.map((p) => p[1])
 
@@ -150,7 +109,6 @@ export function sampleWordmark(
   }
 }
 
-/** Waits for the face to load, then samples. */
 export function useWordmarkPoints(
   lines: string[],
   maxPieces: number,
@@ -168,9 +126,7 @@ export function useWordmarkPoints(
       try {
         await document.fonts.load(`900 240px ${family}`)
         await document.fonts.ready
-      } catch {
-        // A missing webfont only changes the letterforms, not the mechanism.
-      }
+      } catch {}
       if (cancelled) return
       setSample(sampleWordmark(word, maxPieces, worldWidth, family))
     }

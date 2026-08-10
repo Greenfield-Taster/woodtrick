@@ -7,9 +7,6 @@ export function Hero() {
   const copy = useRef<HTMLDivElement>(null)
   const [reserve, setReserve] = useState({ top: 0.1, bottom: 0.3 })
 
-  // The scene has to keep the word clear of the header above and this copy
-  // below, and neither is a number worth guessing: the copy is three lines on
-  // a desktop and six with stacked buttons on a small phone. Measure them.
   useEffect(() => {
     const measure = () => {
       if (!section.current || !copy.current) return
@@ -30,19 +27,11 @@ export function Hero() {
   }, [])
 
   return (
-    // The stage follows the page. The wordmark keeps its contrast by changing
-    // wood rather than by keeping the ground dark — see STAGE in HeroScene.
     <section ref={section} className="relative min-h-[100svh] overflow-hidden bg-ink grain">
       <HeroScene reserve={reserve} />
 
-      {/* The 3D pieces spell the name; the heading below carries it for
-          screen readers and for anyone who never gets the canvas. */}
       <h1 className="sr-only">Unidragon — wooden puzzles cut one piece at a time</h1>
 
-      {/* Settles the stage into the copy. It belongs under the copy, not over
-          it: painted last it washed out the closing line and the second button,
-          which only looked like restraint while the wash was the same near-black
-          as the page. */}
       <div
         className="pointer-events-none absolute inset-x-0 bottom-0 h-40 bg-gradient-to-t from-ink to-transparent"
         aria-hidden

@@ -6,7 +6,6 @@ import { previewGrid } from '../three/product/assemble'
 import { PhotoDrop } from '../components/custom/PhotoDrop'
 import { formatPrice, useCart } from '../store/cart'
 
-/** Texture width for the puzzle face; the height follows the cut. */
 const FACE_WIDTH = 1400
 
 const GOOD = [
@@ -44,8 +43,6 @@ export function CustomPuzzle() {
   const { rows, cols } = previewGrid(size.pieces)
   const faceHeight = Math.round((FACE_WIDTH * rows) / cols)
 
-  // The picture is painted at the proportion of the finished panel, so what the
-  // preview crops is what the cut crops.
   const faces = useMemo(() => {
     if (!front) return null
     return {
@@ -86,7 +83,6 @@ export function CustomPuzzle() {
         <div className="rule-line my-12" />
 
         <div className="grid gap-12 md:grid-cols-12 md:gap-10">
-          {/* min-w-0 so the 3D canvas cannot hold the column open. */}
           <div className="min-w-0 md:col-span-7">
             <div className="relative aspect-square overflow-hidden rounded-sm bg-gradient-to-b from-ink-soft to-ink">
               {faces ? (
@@ -110,8 +106,6 @@ export function CustomPuzzle() {
                   </div>
                 </>
               ) : (
-                // The empty state is the material: a bare sheet with this tier's
-                // cut marked on it, which changes as the size does.
                 <div className="flex h-full w-full flex-col items-center justify-center gap-6 p-8">
                   <img
                     src={sheet}

@@ -7,50 +7,31 @@ import { useInViewport } from '../../lib/useInViewport'
 import { useWordmarkPoints } from './useWordmarkPoints'
 import { PieceField } from './PieceField'
 
-/**
- * On a phone the name is set over two lines. One line on a 390px viewport
- * forces the camera so far back that the letters lose their pieces.
- */
 const WIDE_LINES = ['UNIDRAGON']
 const NARROW_LINES = ['UNI', 'DRAGON']
 const WORD_WIDTH = 12
 
-/**
- * The stage follows the page, and the wood has to follow the stage.
- *
- * A word made of oak reads at roughly 1.6:1 against cream — the same failure,
- * arrived at from the other direction, that cutting the pieces to the letters
- * was meant to end. Walnut against cream is about 6:1, which is the contrast
- * the birch had against the near-black. So the light stage is cut from the dark
- * wood, and the dark stage from the light one.
- */
 const STAGE = {
   dark: {
     background: '#14100c',
     tone: 'oak',
     ambient: { intensity: 0.35, color: '#f0d9bd' },
     key: { intensity: 2.1, color: '#ffe6c4' },
-    // A cold rim from behind keeps the wood off the dark ground.
     rim: { intensity: 0.9, color: '#6d86b8' },
     sweep: { base: 12, peak: 30, rest: 34 },
   },
   light: {
     background: '#f3ece1',
     tone: 'walnut',
-    // Cream bounces light back into everything, so the fill comes down and the
-    // key stays hard: on this ground the letters are read from their shadows.
     ambient: { intensity: 0.72, color: '#fff4e4' },
     key: { intensity: 2.6, color: '#fff1da' },
-    // Warm, not cold: a blue rim on cream reads as a printing error.
     rim: { intensity: 0.35, color: '#c9a887' },
     sweep: { base: 4, peak: 12, rest: 10 },
   },
 } as const
 
 export interface HeroReserve {
-  /** Share of the section's height taken by the header above, 0..1. */
   top: number
-  /** Share taken by the copy below. */
   bottom: number
 }
 
@@ -60,7 +41,6 @@ interface FitCameraProps {
   reserve: HeroReserve
 }
 
-/** Pulls the camera back just far enough to hold the wordmark with margin. */
 function FitCamera({ width, height, reserve }: FitCameraProps) {
   const { camera, size } = useThree()
 
@@ -70,27 +50,14 @@ function FitCamera({ width, height, reserve }: FitCameraProps) {
     const vFov = THREE.MathUtils.degToRad(perspective.fov)
     const half = 2 * Math.tan(vFov / 2)
 
-    // A phone needs more air than a desktop. At 90% of the viewport the word
-    // touches both edges, which reads as a crop however carefully it fits.
     const margin = size.width < 640 ? 1.36 : 1.14
 
-    // The clear band between the header and the copy. Without this the word
-    // centres itself in the whole section and collides with one or the other
-    // on any short viewport — a phone held sideways is the worst case, where
-    // the two together take two thirds of the height.
-    //
-    // The floor is only here to keep the arithmetic from blowing up if the copy
-    // ever fills the section. It must stay well under any band a real layout
-    // produces: a floor the band actually hits is the camera being told there
-    // is room where there is none, and the word lands on the copy.
     const band = Math.max(0.08, 1 - reserve.top - reserve.bottom)
 
     const byWidth = (width * margin) / (half * aspect)
     const byHeight = (height * 1.3) / (half * band)
     const z = THREE.MathUtils.clamp(Math.max(byWidth, byHeight), 8, 70)
 
-    // Put the word in the middle of that band rather than the middle of the
-    // screen. Aiming off centre is what moves it there.
     const aim = (reserve.top + band / 2 - 0.5) * half * z
 
     perspective.position.set(0, aim, z)
@@ -101,10 +68,6 @@ function FitCamera({ width, height, reserve }: FitCameraProps) {
   return null
 }
 
-/**
- * A hard light that travels across the word once the pieces land, so the grain
- * lights up left to right. Cheaper and more physical than a shader sweep.
- */
 function SweepLight({
   active,
   sweep,
@@ -128,7 +91,6 @@ function SweepLight({
 
     const u = THREE.MathUtils.clamp((t - 1.85) / 0.85, 0, 1)
     if (u >= 1) {
-      // Parks in front of the word so the wood keeps its warmth afterwards.
       light.current.position.set(2, 3, 6)
       light.current.intensity = sweep.rest
       return
@@ -184,9 +146,6 @@ function Stage({
         <PieceField
           tone={stage.tone}
           sample={sample}
-          // Every sampled cell gets a piece. Thinning the field to a budget
-          // here would punch holes back into the letters the sampler just
-          // sized its pieces to fill.
           count={sample.points.length}
           animate={quality.animate}
           pointer={pointer}
@@ -222,7 +181,6 @@ export function HeroScene({ reserve }: { reserve: HeroReserve }) {
         camera={{ fov: 38, near: 0.1, far: 100, position: [0, 0, 14] }}
         gl={{ antialias: true, powerPreference: 'high-performance' }}
         onCreated={(state) => {
-          // Handle for the three.js devtools bridge while developing.
           if (import.meta.env.DEV) {
             ;(window as unknown as Record<string, unknown>).__hero = state
           }

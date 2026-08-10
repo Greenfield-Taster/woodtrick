@@ -7,14 +7,8 @@ import { useOrbitDrag } from '../../lib/useOrbitDrag'
 import { assemblePuzzle, previewGrid } from './assemble'
 
 interface PuzzleViewProps {
-  /**
-   * Painted faces rather than artwork recipes: a catalogue design and an
-   * uploaded photograph arrive here as the same thing, so both get this scene
-   * instead of one of them getting a second copy of it.
-   */
   front: HTMLCanvasElement
   back: HTMLCanvasElement
-  /** Real piece count of the selected tier; drives how finely we cut. */
   pieces: number
   flipped: boolean
 }
@@ -58,9 +52,6 @@ function Panel({ front, back, pieces, flipped, orbit }: PanelProps) {
 
 export function PuzzleView(props: PuzzleViewProps) {
   const { ref, visible } = useInViewport<HTMLDivElement>()
-  // On the wrapper rather than the mesh, so the grab starts anywhere in the
-  // frame — hunting for the piece itself to turn it is a poor way to find out
-  // the thing turns at all.
   const orbit = useOrbitDrag<HTMLDivElement>()
 
   return (

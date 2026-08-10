@@ -3,7 +3,6 @@ import { PRODUCTS } from '../../data/catalog'
 import { formatPrice, useCart } from '../../store/cart'
 import { useReveal } from '../../lib/useReveal'
 
-/** Every product shares the same tiers, so the first one can speak for all. */
 const TIERS = PRODUCTS[0].sizes
 
 const NOTES: Record<string, string> = {
@@ -22,7 +21,6 @@ export function Sizes() {
   const maxW = TIERS[TIERS.length - 1].cm[0]
   const maxH = TIERS[TIERS.length - 1].cm[1]
 
-  // A 8.5 cm mug, drawn to the same scale, is the only honest way to show size.
   const mugCm = 8.5
 
   return (
@@ -69,7 +67,6 @@ export function Sizes() {
                 role="img"
                 aria-label={`${tier.label}: ${tier.cm[0]} by ${tier.cm[1]} centimetres`}
               >
-                {/* Ghost of the largest tier, so the choice has a reference. */}
                 <rect
                   x={0}
                   y={maxH - maxH}
@@ -91,7 +88,6 @@ export function Sizes() {
                   style={{ transition: 'all 700ms cubic-bezier(0.16,1,0.3,1)' }}
                 />
 
-                {/* Mug, to scale. */}
                 <g style={{ transition: 'all 700ms cubic-bezier(0.16,1,0.3,1)' }}>
                   <rect
                     x={maxW + 3}

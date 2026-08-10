@@ -5,20 +5,13 @@ export interface PieceGeometry {
   geometry: THREE.BufferGeometry
   row: number
   col: number
-  /** Centre of the piece in puzzle space, normalised to -0.5..0.5. */
   center: THREE.Vector2
 }
 
-/** Material slots produced by `splitCaps`. */
 export const SLOT_FRONT = 0
 export const SLOT_BACK = 1
 export const SLOT_EDGE = 2
 
-/**
- * Re-groups an extruded, non-indexed geometry into front cap, back cap and
- * side wall so each can take its own material. ExtrudeGeometry only gives two
- * groups (caps + walls), which is one short of what the flip reveal needs.
- */
 function splitCaps(geometry: THREE.BufferGeometry): THREE.BufferGeometry {
   const position = geometry.getAttribute('position')
   const normal = geometry.getAttribute('normal')
@@ -71,16 +64,9 @@ export interface PuzzleOptions {
   rows: number
   cols: number
   seed: number
-  /** Piece thickness relative to a piece being 1 unit wide. */
   thickness?: number
 }
 
-/**
- * Builds every piece of a puzzle as its own geometry, centred on its own
- * origin and carrying UVs that address its slice of the artwork.
- *
- * Callers own the returned geometries and must dispose them.
- */
 export function buildPuzzle(options: PuzzleOptions): { pieces: PieceGeometry[]; grid: TabGrid } {
   const { rows, cols, seed, thickness = 0.16 } = options
   const grid = makeTabGrid(rows, cols, seed)
@@ -100,9 +86,6 @@ export function buildPuzzle(options: PuzzleOptions): { pieces: PieceGeometry[]; 
         steps: 1,
       })
 
-      // ExtrudeGeometry derives cap UVs from XY, which are grid coordinates
-      // here. Normalising by the grid size maps each piece onto its slice of
-      // the artwork with no per-piece bookkeeping.
       const uv = geometry.getAttribute('uv')
       for (let i = 0; i < uv.count; i++) {
         uv.setXY(i, uv.getX(i) / cols, uv.getY(i) / rows)
@@ -125,16 +108,8 @@ export function buildPuzzle(options: PuzzleOptions): { pieces: PieceGeometry[]; 
   return { pieces, grid }
 }
 
-/** Every combination of tab and blank on four edges. */
 export const EDGE_VARIANTS = 16
 
-/**
- * One geometry per edge combination, indexed by `variantOf`, so a field can
- * place the piece that fits its neighbours instead of an arbitrary one.
- *
- * Sixteen geometries is also sixteen instanced meshes however many pieces the
- * field ends up holding, which is what keeps the draw call count flat.
- */
 export function buildEdgeVariants(seed: number, thickness = 0.16): THREE.BufferGeometry[] {
   const out: THREE.BufferGeometry[] = []
 
@@ -149,9 +124,6 @@ export function buildEdgeVariants(seed: number, thickness = 0.16): THREE.BufferG
       0,
       0,
       seed + v * 977,
-      // A wordmark piece covers a handful of pixels. Sampling its knobs as
-      // finely as a piece filling a product shot spends triangles nobody can
-      // see, and there are several hundred of them.
       0.5,
     )
 
@@ -165,9 +137,6 @@ export function buildEdgeVariants(seed: number, thickness = 0.16): THREE.BufferG
       steps: 1,
     })
 
-    // Each variant reads its own quarter-by-quarter patch of the grain, so a
-    // field built from sixteen shapes still looks cut from one sheet rather
-    // than stamped from one piece.
     const uv = geometry.getAttribute('uv')
     for (let i = 0; i < uv.count; i++) {
       uv.setXY(i, (uv.getX(i) + (v % 4)) / 4, (uv.getY(i) + Math.floor(v / 4)) / 4)

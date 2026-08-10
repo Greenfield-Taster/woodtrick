@@ -21,8 +21,6 @@ function Arrow({ direction }: { direction: -1 | 1 }) {
 export function Bestsellers() {
   const reveal = useReveal<HTMLDivElement>()
   const rail = useDragScroll<HTMLDivElement>()
-  // Smaller cards mean less overflow, so the rail needs every pick it has to
-  // still read as something worth dragging.
   const picks = PRODUCTS.filter((p) => p.bestseller)
 
   return (
@@ -62,8 +60,6 @@ export function Bestsellers() {
         </div>
       </div>
 
-      {/* Runs past the container edge — the rail should feel longer than the
-          page is wide. */}
       <div
         ref={rail.ref}
         onPointerDown={rail.onPointerDown}

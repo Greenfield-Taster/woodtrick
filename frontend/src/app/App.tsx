@@ -9,8 +9,6 @@ import { ProductPage } from '../routes/ProductPage'
 import { CustomPuzzle } from '../routes/CustomPuzzle'
 
 export function App() {
-  // The hero animation only reads properly from the top of the page, so the
-  // browser must not restore a previous scroll position on reload.
   if (typeof window !== 'undefined' && 'scrollRestoration' in window.history) {
     window.history.scrollRestoration = 'manual'
   }

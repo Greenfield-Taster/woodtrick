@@ -6,7 +6,6 @@ import { useScrollProgress } from '../../lib/useReveal'
 export function HiddenSide() {
   const progress = useRef(0)
   const sectionRef = useScrollProgress<HTMLDivElement>((value) => {
-    // The turn happens across the middle of the section, not its full travel.
     progress.current = Math.max(0, Math.min(1, (value - 0.32) / 0.36))
   })
 

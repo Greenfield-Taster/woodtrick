@@ -9,7 +9,6 @@ const TONES: Record<WoodTone, { base: string; grain: string; knot: string }> = {
   walnut: { base: '#8b5c33', grain: '#6a4222', knot: '#4f3018' },
 }
 
-/** Plywood face: long grain with the occasional knot. */
 function paintWood(ctx: CanvasRenderingContext2D, size: number, tone: WoodTone, seed: number) {
   const rand = mulberry32(seed)
   const { base, grain, knot } = TONES[tone]
@@ -17,7 +16,6 @@ function paintWood(ctx: CanvasRenderingContext2D, size: number, tone: WoodTone, 
   ctx.fillStyle = base
   ctx.fillRect(0, 0, size, size)
 
-  // Grain runs along one axis, wandering slightly as real veneer does.
   const lines = Math.round(size / 2.2)
   for (let i = 0; i < lines; i++) {
     const y = (i / lines) * size
@@ -36,7 +34,6 @@ function paintWood(ctx: CanvasRenderingContext2D, size: number, tone: WoodTone, 
   }
   ctx.globalAlpha = 1
 
-  // Two or three knots, drawn as nested ellipses.
   const knots = 2 + Math.floor(rand() * 2)
   for (let k = 0; k < knots; k++) {
     const cx = rand() * size
@@ -76,7 +73,6 @@ export function woodTexture(tone: WoodTone, seed = 3, size = 512): THREE.CanvasT
   return texture
 }
 
-/** Turns any canvas into a colour texture ready for a material `map`. */
 export function canvasTexture(canvas: HTMLCanvasElement): THREE.CanvasTexture {
   const texture = new THREE.CanvasTexture(canvas)
   texture.colorSpace = THREE.SRGBColorSpace
@@ -85,7 +81,6 @@ export function canvasTexture(canvas: HTMLCanvasElement): THREE.CanvasTexture {
 }
 
 export interface PieceMaterials {
-  /** Ordered to match SLOT_FRONT, SLOT_BACK, SLOT_EDGE. */
   materials: THREE.Material[]
   dispose(): void
 }
@@ -114,10 +109,6 @@ export function woodPieceMaterials(tone: WoodTone = 'oak'): PieceMaterials {
   }
 }
 
-/**
- * Materials for a real product: the artwork on the front, its inverted twin on
- * the back — the hidden picture the brand is built on — and raw ply on the cut.
- */
 export function artworkPieceMaterials(
   faceCanvas: HTMLCanvasElement,
   backCanvas: HTMLCanvasElement,

@@ -1,18 +1,9 @@
 import { useEffect, useState } from 'react'
 
-/**
- * `still` honours prefers-reduced-motion: scenes compose themselves instantly
- * and never animate. `low` is phones and weak GPUs. `high` is everything else.
- */
 export type QualityTier = 'high' | 'low' | 'still'
 
 export interface QualitySettings {
   tier: QualityTier
-  /**
-   * Ceiling on hero pieces, not a target. The wordmark asks for the size of
-   * piece its letters can be read at and takes however many that comes to;
-   * this only caps it on a device that cannot draw them.
-   */
   heroPieces: number
   dpr: [number, number]
   shadows: boolean

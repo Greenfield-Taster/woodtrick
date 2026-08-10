@@ -1,24 +1,13 @@
-/**
- * Marquetry figures: stylised animals built from flat inlaid shapes.
- *
- * Everything is authored in a normalised 0..1 box and mapped to pixels by the
- * caller, so one figure serves a 96px card thumbnail and a 2048px puzzle face.
- */
-
 import type { MarquetryFigure } from '../data/catalog'
 
 export interface Mapper {
-  /** Normalised x to pixels. */
   x(n: number): number
-  /** Normalised y to pixels. */
   y(n: number): number
-  /** Normalised length to pixels. */
   s(n: number): number
 }
 
 type Pt = [number, number]
 
-/** [main, secondary, shadow, ground] */
 type Palette = string[]
 
 function poly(ctx: CanvasRenderingContext2D, m: Mapper, pts: Pt[], fill: string) {
@@ -50,7 +39,6 @@ function ellipse(
   ctx.fill()
 }
 
-/** A tapered stroke, used for antlers, horns and the dragon's spine. */
 function taperedPath(
   ctx: CanvasRenderingContext2D,
   m: Mapper,
@@ -76,12 +64,9 @@ function mirrorX(pts: Pt[]): Pt[] {
   return pts.map(([x, y]) => [1 - x, y] as Pt)
 }
 
-// ---------------------------------------------------------------------------
-
 function owl(ctx: CanvasRenderingContext2D, m: Mapper, p: Palette) {
   const [main, second, shadow] = p
 
-  // Body: a wide teardrop built as a polygon so the edges stay faceted.
   poly(
     ctx,
     m,
@@ -98,15 +83,12 @@ function owl(ctx: CanvasRenderingContext2D, m: Mapper, p: Palette) {
     main,
   )
 
-  // Wings, drawn as two darker facets tucked against the body.
   poly(ctx, m, [[0.24, 0.44], [0.4, 0.55], [0.36, 0.82], [0.24, 0.7]], shadow)
   poly(ctx, m, mirrorX([[0.24, 0.44], [0.4, 0.55], [0.36, 0.82], [0.24, 0.7]]), shadow)
 
-  // Ear tufts.
   poly(ctx, m, [[0.3, 0.24], [0.38, 0.1], [0.44, 0.26]], main)
   poly(ctx, m, mirrorX([[0.3, 0.24], [0.38, 0.1], [0.44, 0.26]]), main)
 
-  // Face disc.
   poly(
     ctx,
     m,
@@ -121,16 +103,13 @@ function owl(ctx: CanvasRenderingContext2D, m: Mapper, p: Palette) {
     second,
   )
 
-  // Eyes. The last two pieces anyone places.
   ellipse(ctx, m, 0.4, 0.36, 0.085, 0.085, p[3])
   ellipse(ctx, m, 0.6, 0.36, 0.085, 0.085, p[3])
   ellipse(ctx, m, 0.4, 0.36, 0.038, 0.038, second)
   ellipse(ctx, m, 0.6, 0.36, 0.038, 0.038, second)
 
-  // Beak.
   poly(ctx, m, [[0.5, 0.4], [0.545, 0.5], [0.455, 0.5]], main)
 
-  // Breast chevrons.
   ctx.strokeStyle = second
   ctx.lineWidth = m.s(0.012)
   for (let i = 0; i < 4; i++) {
@@ -142,7 +121,6 @@ function owl(ctx: CanvasRenderingContext2D, m: Mapper, p: Palette) {
     ctx.stroke()
   }
 
-  // Feet.
   poly(ctx, m, [[0.44, 0.88], [0.48, 0.95], [0.4, 0.95]], shadow)
   poly(ctx, m, mirrorX([[0.44, 0.88], [0.48, 0.95], [0.4, 0.95]]), shadow)
 }
@@ -160,7 +138,6 @@ function deer(ctx: CanvasRenderingContext2D, m: Mapper, p: Palette) {
   taperedPath(ctx, m, antler, 0.03, 0.012, second)
   taperedPath(ctx, m, mirrorX(antler), 0.03, 0.012, second)
 
-  // Antler branches.
   const branches: Pt[][] = [
     [[0.4, 0.36], [0.3, 0.33], [0.24, 0.29]],
     [[0.34, 0.28], [0.24, 0.22], [0.17, 0.2]],
@@ -171,11 +148,9 @@ function deer(ctx: CanvasRenderingContext2D, m: Mapper, p: Palette) {
     taperedPath(ctx, m, mirrorX(b), 0.019, 0.008, second)
   }
 
-  // Ears.
   ellipse(ctx, m, 0.335, 0.5, 0.075, 0.038, shadow, -0.5)
   ellipse(ctx, m, 0.665, 0.5, 0.075, 0.038, shadow, 0.5)
 
-  // Head: a long faceted wedge.
   poly(
     ctx,
     m,
@@ -192,10 +167,8 @@ function deer(ctx: CanvasRenderingContext2D, m: Mapper, p: Palette) {
     main,
   )
 
-  // Muzzle facet.
   poly(ctx, m, [[0.5, 0.66], [0.58, 0.74], [0.53, 0.9], [0.47, 0.9], [0.42, 0.74]], second)
 
-  // Eyes and nose.
   ellipse(ctx, m, 0.425, 0.585, 0.028, 0.032, p[3])
   ellipse(ctx, m, 0.575, 0.585, 0.028, 0.032, p[3])
   poly(ctx, m, [[0.5, 0.83], [0.535, 0.88], [0.465, 0.88]], p[3])
@@ -213,10 +186,8 @@ function whale(ctx: CanvasRenderingContext2D, m: Mapper, p: Palette) {
   ctx.fillStyle = main
   ctx.fill()
 
-  // Tail fluke.
   poly(ctx, m, [[0.74, 0.44], [0.94, 0.24], [0.9, 0.5], [0.95, 0.74], [0.74, 0.62]], main)
 
-  // Belly, a lighter inlay following the underside.
   ctx.beginPath()
   ctx.moveTo(m.x(0.16), m.y(0.56))
   ctx.bezierCurveTo(m.x(0.34), m.y(0.78), m.x(0.58), m.y(0.76), m.x(0.7), m.y(0.64))
@@ -225,7 +196,6 @@ function whale(ctx: CanvasRenderingContext2D, m: Mapper, p: Palette) {
   ctx.fillStyle = second
   ctx.fill()
 
-  // Pleats.
   ctx.strokeStyle = shadow
   ctx.lineWidth = m.s(0.009)
   for (let i = 0; i < 6; i++) {
@@ -236,7 +206,6 @@ function whale(ctx: CanvasRenderingContext2D, m: Mapper, p: Palette) {
     ctx.stroke()
   }
 
-  // Side fin and eye.
   poly(ctx, m, [[0.4, 0.62], [0.52, 0.7], [0.38, 0.76]], shadow)
   ellipse(ctx, m, 0.22, 0.5, 0.018, 0.018, p[3])
 }
@@ -246,7 +215,6 @@ function butterfly(ctx: CanvasRenderingContext2D, m: Mapper, p: Palette) {
 
   const wing = (flip: boolean) => {
     const sx = (n: number) => (flip ? 1 - n : n)
-    // Upper wing.
     ctx.beginPath()
     ctx.moveTo(m.x(sx(0.5)), m.y(0.5))
     ctx.bezierCurveTo(m.x(sx(0.34)), m.y(0.12), m.x(sx(0.06)), m.y(0.16), m.x(sx(0.1)), m.y(0.44))
@@ -255,7 +223,6 @@ function butterfly(ctx: CanvasRenderingContext2D, m: Mapper, p: Palette) {
     ctx.fillStyle = main
     ctx.fill()
 
-    // Lower wing.
     ctx.beginPath()
     ctx.moveTo(m.x(sx(0.5)), m.y(0.52))
     ctx.bezierCurveTo(m.x(sx(0.32)), m.y(0.58), m.x(sx(0.16)), m.y(0.72), m.x(sx(0.26)), m.y(0.9))
@@ -264,7 +231,6 @@ function butterfly(ctx: CanvasRenderingContext2D, m: Mapper, p: Palette) {
     ctx.fillStyle = shadow
     ctx.fill()
 
-    // Wing eyes.
     ellipse(ctx, m, sx(0.24), 0.32, 0.07, 0.055, second)
     ellipse(ctx, m, sx(0.24), 0.32, 0.03, 0.024, p[3])
     ellipse(ctx, m, sx(0.3), 0.79, 0.038, 0.03, second)
@@ -273,7 +239,6 @@ function butterfly(ctx: CanvasRenderingContext2D, m: Mapper, p: Palette) {
   wing(false)
   wing(true)
 
-  // Body and antennae.
   ellipse(ctx, m, 0.5, 0.56, 0.022, 0.19, second)
   ellipse(ctx, m, 0.5, 0.36, 0.032, 0.045, second)
   taperedPath(ctx, m, [[0.5, 0.34], [0.42, 0.22], [0.36, 0.14]], 0.012, 0.005, second)
@@ -283,13 +248,11 @@ function butterfly(ctx: CanvasRenderingContext2D, m: Mapper, p: Palette) {
 function fox(ctx: CanvasRenderingContext2D, m: Mapper, p: Palette) {
   const [main, second, shadow] = p
 
-  // Ears.
   poly(ctx, m, [[0.26, 0.44], [0.3, 0.1], [0.5, 0.34]], main)
   poly(ctx, m, mirrorX([[0.26, 0.44], [0.3, 0.1], [0.5, 0.34]]), main)
   poly(ctx, m, [[0.32, 0.38], [0.34, 0.19], [0.45, 0.35]], shadow)
   poly(ctx, m, mirrorX([[0.32, 0.38], [0.34, 0.19], [0.45, 0.35]]), shadow)
 
-  // Head, faceted down to the snout.
   poly(
     ctx,
     m,
@@ -304,14 +267,11 @@ function fox(ctx: CanvasRenderingContext2D, m: Mapper, p: Palette) {
     main,
   )
 
-  // Cheek inlays.
   poly(ctx, m, [[0.28, 0.5], [0.44, 0.6], [0.32, 0.68]], second)
   poly(ctx, m, mirrorX([[0.28, 0.5], [0.44, 0.6], [0.32, 0.68]]), second)
 
-  // Muzzle.
   poly(ctx, m, [[0.5, 0.6], [0.6, 0.72], [0.5, 0.94], [0.4, 0.72]], second)
 
-  // Eyes and nose.
   poly(ctx, m, [[0.36, 0.48], [0.46, 0.52], [0.37, 0.56]], p[3])
   poly(ctx, m, mirrorX([[0.36, 0.48], [0.46, 0.52], [0.37, 0.56]]), p[3])
   poly(ctx, m, [[0.5, 0.78], [0.545, 0.85], [0.455, 0.85]], p[3])
@@ -320,7 +280,6 @@ function fox(ctx: CanvasRenderingContext2D, m: Mapper, p: Palette) {
 function ram(ctx: CanvasRenderingContext2D, m: Mapper, p: Palette) {
   const [main, second, shadow] = p
 
-  // Two horns, spiralling outward from the temples.
   const horn = (flip: boolean): Pt[] => {
     const out: Pt[] = []
     const dir = flip ? -1 : 1
@@ -335,7 +294,6 @@ function ram(ctx: CanvasRenderingContext2D, m: Mapper, p: Palette) {
   taperedPath(ctx, m, horn(false), 0.075, 0.016, second)
   taperedPath(ctx, m, horn(true), 0.075, 0.016, second)
 
-  // Horn ridges.
   ctx.strokeStyle = shadow
   ctx.lineWidth = m.s(0.006)
   for (const pts of [horn(false), horn(true)]) {
@@ -353,7 +311,6 @@ function ram(ctx: CanvasRenderingContext2D, m: Mapper, p: Palette) {
     }
   }
 
-  // Head.
   poly(
     ctx,
     m,
@@ -375,13 +332,9 @@ function ram(ctx: CanvasRenderingContext2D, m: Mapper, p: Palette) {
 function dragon(ctx: CanvasRenderingContext2D, m: Mapper, p: Palette) {
   const [main, second, shadow] = p
 
-  // The body is a spiral read from the head, on the outside, inward to the
-  // tail tip at the centre — a dragon curled around itself.
   const cx = 0.5
   const cy = 0.52
   const pts: Pt[] = []
-  // Few enough turns that the coils stay apart. More than about one and a half
-  // and a thick body closes the gaps, and the dragon becomes a bullseye.
   const turns = 1.5
   const steps = 200
   const headAngle = -0.5
@@ -392,8 +345,6 @@ function dragon(ctx: CanvasRenderingContext2D, m: Mapper, p: Palette) {
     pts.push([cx + Math.cos(angle) * radius * 1.04, cy + Math.sin(angle) * radius])
   }
 
-  // Dorsal spikes, always pointing away from the centre so the silhouette
-  // reads as a back rather than as the spokes of a wheel.
   for (let i = 4; i < steps - 30; i += 7) {
     const [ax, ay] = pts[i]
     const dx = ax - cx
@@ -417,7 +368,6 @@ function dragon(ctx: CanvasRenderingContext2D, m: Mapper, p: Palette) {
 
   taperedPath(ctx, m, pts, 0.115, 0.014, main)
 
-  // Head, sitting just beyond the outer end of the spiral.
   const [hx, hy] = pts[0]
   const ox = (hx - cx) / Math.hypot(hx - cx, hy - cy)
   const oy = (hy - cy) / Math.hypot(hx - cx, hy - cy)
@@ -428,13 +378,10 @@ function dragon(ctx: CanvasRenderingContext2D, m: Mapper, p: Palette) {
     hy + oy * along + ny * side,
   ]
 
-  // Jaw and snout.
   poly(ctx, m, [at(-0.02, -0.075), at(0.13, -0.05), at(0.19, 0), at(0.12, 0.055), at(-0.02, 0.075)], main)
   poly(ctx, m, [at(0.06, -0.045), at(0.2, -0.008), at(0.19, 0.03), at(0.06, 0.045)], second)
-  // Horn swept back over the skull.
   poly(ctx, m, [at(0.0, -0.06), at(-0.11, -0.15), at(-0.02, -0.02)], second)
   poly(ctx, m, [at(-0.01, 0.05), at(-0.13, 0.12), at(-0.03, 0.015)], shadow)
-  // Eye.
   ellipse(ctx, m, ...(at(0.05, -0.022) as [number, number]), 0.019, 0.013, p[3])
 }
 

@@ -2,18 +2,11 @@ import * as THREE from 'three'
 import { buildPuzzle, SLOT_BACK, SLOT_EDGE, SLOT_FRONT } from '../piece/geometry'
 
 export interface AssembledPuzzle {
-  /** One geometry per material slot: front face, back face, cut edge. */
   slots: [THREE.BufferGeometry, THREE.BufferGeometry, THREE.BufferGeometry]
-  /** Finished panel size in local units, width 1. */
   size: [number, number]
   dispose(): void
 }
 
-/**
- * Cuts a puzzle and welds it back together as three geometries — one per
- * material slot — so an assembled panel of a hundred pieces costs three draw
- * calls instead of three hundred.
- */
 export function assemblePuzzle(rows: number, cols: number, seed: number): AssembledPuzzle {
   const { pieces } = buildPuzzle({ rows, cols, seed, thickness: 0.09 })
 
@@ -29,7 +22,6 @@ export function assemblePuzzle(rows: number, cols: number, seed: number): Assemb
   const normal = new THREE.Vector3()
 
   for (const piece of pieces) {
-    // Undo the per-piece centring, then normalise the whole panel to width 1.
     matrix
       .makeScale(scale, scale, scale)
       .multiply(
@@ -80,11 +72,6 @@ export function assemblePuzzle(rows: number, cols: number, seed: number): Assemb
   }
 }
 
-/**
- * How many pieces to actually cut for the preview. Real tiers run to seven
- * hundred; drawing that many adds nothing a viewer can see and costs a second
- * of build time, so the preview scales with the tier without matching it.
- */
 export function previewGrid(pieces: number): { rows: number; cols: number } {
   if (pieces <= 100) return { rows: 4, cols: 5 }
   if (pieces <= 200) return { rows: 5, cols: 7 }

@@ -6,17 +6,9 @@ interface PhotoDropProps {
   hint: string
   photo: LoadedPhoto | null
   onPhoto(photo: LoadedPhoto | null): void
-  /** The second slot is optional and says so. */
   optional?: boolean
 }
 
-/**
- * One picture slot: choose a file, drop one, or clear the one that is there.
- *
- * Keeps its own error text, because every rejection is something the visitor
- * fixes by picking a different file — there is nothing for the page above to
- * do about it.
- */
 export function PhotoDrop({ label, hint, photo, onPhoto, optional = false }: PhotoDropProps) {
   const inputId = useId()
   const input = useRef<HTMLInputElement>(null)
@@ -65,7 +57,6 @@ export function PhotoDrop({ label, hint, photo, onPhoto, optional = false }: Pho
           className="sr-only"
           onChange={(event) => {
             void take(event.target.files?.[0])
-            // Lets the same file be chosen again after it has been cleared.
             event.target.value = ''
           }}
         />

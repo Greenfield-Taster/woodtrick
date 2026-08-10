@@ -4,9 +4,6 @@ import { countItems, useCart } from '../../store/cart'
 import { MobileMenu } from './MobileMenu'
 import { ThemeToggle } from './ThemeToggle'
 
-// Two destinations, not six. The collections are one click into the shop and
-// they are listed in the footer; Sizes pointed back at the home page, which is
-// what the logo is for.
 const NAV = [
   { to: '/shop', label: 'Shop' },
   { to: '/custom', label: 'Custom puzzle' },
@@ -28,7 +25,6 @@ export function Header() {
     return () => window.removeEventListener('scroll', onScroll)
   }, [])
 
-  // A menu left standing across a navigation hides the page you asked for.
   useEffect(() => setMenuOpen(false), [pathname, search])
 
   const count = countItems(lines)
@@ -109,8 +105,6 @@ export function Header() {
               aria-label={menuOpen ? 'Close menu' : 'Open menu'}
               className="grid h-10 w-10 shrink-0 place-items-center rounded-full border border-ink-line text-paper transition-colors hover:border-ember md:hidden"
             >
-              {/* Two rules that fold into a cross — the same hairline this page
-                  divides its sections with. */}
               <span className="relative block h-3 w-4" aria-hidden>
                 <span
                   className={[

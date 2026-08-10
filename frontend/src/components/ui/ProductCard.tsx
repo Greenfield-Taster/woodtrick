@@ -6,7 +6,6 @@ import { ArtworkImage } from './ArtworkImage'
 
 interface ProductCardProps {
   product: Product
-  /** Cards deliberately vary in height to break the grid rhythm. */
   tall?: boolean
 }
 
@@ -25,9 +24,6 @@ export function ProductCard({ product, tall = false }: ProductCardProps) {
           tall ? 'aspect-[3/4]' : 'aspect-[4/5]',
         ].join(' ')}
       >
-        {/* The zoom lives on a wrapper, never on the canvas itself: scaling a
-            canvas element forces the compositor to re-rasterise its bitmap on
-            every frame of the transition. */}
         <div className="h-full w-full transition-transform duration-[900ms] ease-[cubic-bezier(0.16,1,0.3,1)] will-change-transform group-hover:scale-[1.06]">
           <ArtworkImage
             artwork={product.artwork}

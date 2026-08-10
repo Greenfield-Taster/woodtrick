@@ -38,11 +38,8 @@ export interface PieceFieldProps {
   sample: WordmarkSample
   count: number
   animate: boolean
-  /** Normalised pointer, -1..1 on both axes. */
   pointer: React.RefObject<THREE.Vector2>
-  /** Which wood the letters are cut from — the stage decides. */
   tone: WoodTone
-  /** Reports intro progress 0..1 so the DOM copy can follow the pieces in. */
   onProgress?: (progress: number) => void
 }
 
@@ -56,9 +53,6 @@ export function PieceField({ sample, count, animate, pointer, tone, onProgress }
   const geometries = useMemo(() => buildEdgeVariants(4211), [])
   const wood = useMemo(() => woodPieceMaterials(tone), [tone])
 
-  // Two effects, not one: the wood is rebuilt whenever the stage changes tone,
-  // and a shared cleanup would take the geometries down with it while they are
-  // still on screen.
   useEffect(() => () => disposeGeometries(geometries), [geometries])
   useEffect(() => () => wood.dispose(), [wood])
 
@@ -66,7 +60,6 @@ export function PieceField({ sample, count, animate, pointer, tone, onProgress }
     const points = sample.points
     const total = Math.min(count, points.length)
 
-    // Even coverage of the wordmark whatever the piece budget is.
     const stride = points.length / total
     const chosen: Array<[number, number]> = []
     const chosenCells: Array<[number, number]> = []
@@ -83,14 +76,11 @@ export function PieceField({ sample, count, animate, pointer, tone, onProgress }
 
     const buckets: number[][] = Array.from({ length: EDGE_VARIANTS }, () => [])
     const pieces: PieceState[] = chosen.map(([x, y], i) => {
-      // The shape is dictated by where the piece sits, not by which piece it
-      // is: its tabs are the blanks of the pieces beside it.
       const [col, row] = chosenCells[i]
       const variant = variantOf(edgesAt(col, row))
       const slot = buckets[variant].length
       buckets[variant].push(i)
 
-      // Pieces arrive from a shell in front of and around the camera.
       const angle = (i * 2.399) % (Math.PI * 2)
       const radius = 9 + (i % 7) * 1.6
       const origin = new THREE.Vector3(
@@ -106,8 +96,6 @@ export function PieceField({ sample, count, animate, pointer, tone, onProgress }
           ((i * 13) % 100) / 100 * Math.PI * 2,
         ),
       )
-      // A few degrees of tilt on every axis so the key light picks each piece
-      // out individually instead of washing the whole word flat.
       const endQuat = new THREE.Quaternion().setFromEuler(
         new THREE.Euler(
           (((i * 41) % 100) / 100 - 0.5) * 0.16,
@@ -116,7 +104,6 @@ export function PieceField({ sample, count, animate, pointer, tone, onProgress }
         ),
       )
 
-      // Left to right, so the word writes itself.
       const delay = ((x - minX) / span) * INTRO_STAGGER + (((i * 53) % 100) / 100) * 0.1
 
       return {
@@ -131,9 +118,6 @@ export function PieceField({ sample, count, animate, pointer, tone, onProgress }
       }
     })
 
-    // The body of a piece is the sampling step, so that a tab lands in the
-    // blank cut for it. The few percent over closes the hairline the wander
-    // along each cut would otherwise leave between two pieces.
     return { pieces, buckets, scale: sample.spacing * 1.04 }
   }, [sample, count])
 
@@ -150,8 +134,6 @@ export function PieceField({ sample, count, animate, pointer, tone, onProgress }
     [],
   )
 
-  // Veneer is never one colour. A little per-piece tint stops the word reading
-  // as a single flat slab.
   const tinted = useRef(false)
   useEffect(() => {
     tinted.current = false
@@ -167,7 +149,6 @@ export function PieceField({ sample, count, animate, pointer, tone, onProgress }
       onProgress(introDone)
     }
 
-    // One piece flips every few seconds once the word has landed.
     if (animate && introDone === 1 && t - flip.current.at > 3.2) {
       flip.current = { index: Math.floor(Math.random() * pieces.length), at: t }
     }
@@ -195,7 +176,6 @@ export function PieceField({ sample, count, animate, pointer, tone, onProgress }
       scratch.quat.slerpQuaternions(piece.startQuat, piece.endQuat, easeOutCubic(progress))
 
       if (animate && progress === 1) {
-        // Idle: a slow breath, plus the occasional flip to the hidden side.
         scratch.position.y += Math.sin(t * 0.7 + piece.bobPhase) * scale * 0.05
         scratch.position.z += Math.cos(t * 0.5 + piece.bobPhase) * scale * 0.12
 

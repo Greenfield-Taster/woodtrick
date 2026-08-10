@@ -11,20 +11,16 @@ import { artworkPieceMaterials } from './woodMaterial'
 interface FlipPieceProps {
   front: Artwork
   back: Artwork
-  /** 0 shows the front, 1 shows the back. Driven by scroll. */
   progress: React.RefObject<number>
 }
 
 interface PieceProps extends FlipPieceProps {
-  /** Whatever the visitor has turned the piece by, on top of the scroll. */
   orbit: React.RefObject<{ yaw: number; pitch: number }>
 }
 
 function Piece({ front, back, progress, orbit }: PieceProps) {
   const mesh = useRef<THREE.Mesh>(null)
 
-  // One piece lifted out of the middle of a small puzzle, so its outline has
-  // tabs and blanks on all four sides.
   const { geometry, materials, dispose } = useMemo(() => {
     const { pieces } = buildPuzzle({ rows: 3, cols: 3, seed: 77, thickness: 0.09 })
     const middle = pieces[4]
@@ -32,8 +28,6 @@ function Piece({ front, back, progress, orbit }: PieceProps) {
 
     const kit = artworkPieceMaterials(artworkCanvas(front, 1024), artworkCanvas(back, 1024))
 
-    // The piece's UVs address its own ninth of the picture; stretch them so the
-    // whole artwork lands on this single piece instead.
     const uv = middle.geometry.getAttribute('uv')
     for (let i = 0; i < uv.count; i++) {
       uv.setXY(i, (uv.getX(i) - 1 / 3) * 3, (uv.getY(i) - 1 / 3) * 3)
@@ -54,8 +48,6 @@ function Piece({ front, back, progress, orbit }: PieceProps) {
 
   useFrame(({ clock }, delta) => {
     if (!mesh.current) return
-    // Scroll and hand add up rather than compete: turning the piece yourself
-    // shifts the zero point, and scrolling on keeps flipping it from there.
     const target = (progress.current ?? 0) * Math.PI + (orbit.current?.yaw ?? 0)
     mesh.current.rotation.y = THREE.MathUtils.damp(mesh.current.rotation.y, target, 6, delta)
     mesh.current.rotation.x = THREE.MathUtils.damp(
@@ -83,8 +75,6 @@ export function FlipPiece({ front, back, progress }: FlipPieceProps) {
       ref={ref}
       onPointerDown={orbit.onPointerDown}
       className={['h-full w-full', orbit.dragging ? 'cursor-grabbing' : 'cursor-grab'].join(' ')}
-      // pan-y, not none: a finger dragging sideways turns the piece, but one
-      // dragging up the page must still scroll past this section.
       style={{ touchAction: 'pan-y' }}
     >
       <Canvas

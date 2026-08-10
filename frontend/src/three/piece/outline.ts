@@ -1,7 +1,6 @@
 import * as THREE from 'three'
 import { mulberry32 } from '../../art/artwork'
 
-/** -1 blank, 0 flat (puzzle border), +1 tab. */
 export type Tab = -1 | 0 | 1
 
 export interface PieceEdges {
@@ -14,17 +13,10 @@ export interface PieceEdges {
 export interface TabGrid {
   rows: number
   cols: number
-  /** vertical[r][c] is the cut between piece (r,c) and (r,c+1). */
   vertical: Tab[][]
-  /** horizontal[r][c] is the cut between piece (r,c) and (r+1,c). */
   horizontal: Tab[][]
 }
 
-/**
- * Builds a consistent set of cuts for a rows x cols puzzle, so that every
- * tab has a matching blank on the piece next to it and the outer border is
- * flat. Row 0 is the bottom row.
- */
 export function makeTabGrid(rows: number, cols: number, seed: number): TabGrid {
   const rand = mulberry32(seed)
   const pick = (): Tab => (rand() > 0.5 ? 1 : -1)
@@ -50,22 +42,12 @@ export function edgesFor(grid: TabGrid, r: number, c: number): PieceEdges {
   }
 }
 
-/**
- * The cut between a cell and its neighbour, decided from the coordinates of
- * the cut itself so that both cells agree on it without consulting each other.
- * `axis` 0 is the cut to the right of (col, row), 1 the cut below it.
- *
- * This is what lets a field of pieces placed straight onto a grid interlock:
- * every tab has the blank it belongs in, rather than tabs meeting tabs and
- * fraying the edge of whatever the field is spelling out.
- */
 export function cutTab(col: number, row: number, axis: 0 | 1): Tab {
   let h = Math.imul(col * 374761393 + row * 668265263 + axis * 1442695041, 2246822519)
   h = Math.imul(h ^ (h >>> 13), 3266489917)
   return ((h ^ (h >>> 16)) & 1) === 0 ? 1 : -1
 }
 
-/** The four edges of the cell at (col, row), row counted downwards. */
 export function edgesAt(col: number, row: number): PieceEdges {
   const neg = (t: Tab): Tab => -t as Tab
   return {
@@ -76,7 +58,6 @@ export function edgesAt(col: number, row: number): PieceEdges {
   }
 }
 
-/** Index of these edges in the pool built by `buildEdgeVariants`. */
 export function variantOf(edges: PieceEdges): number {
   return (
     (edges.bottom > 0 ? 1 : 0) |
@@ -88,16 +69,10 @@ export function variantOf(edges: PieceEdges): number {
 
 type Pt = { t: number; off: number }
 
-/**
- * Samples one edge in normalised edge space: `t` runs 0..1 along the edge,
- * `off` is the outward offset. The knob is a circle joined to the baseline by
- * two necks, which is what gives a real jigsaw piece its undercut.
- */
 function edgeProfile(tab: Tab, rand: () => number, detail: number): Pt[] {
   const pts: Pt[] = []
   const steps = (full: number, floor: number) => Math.max(floor, Math.round(full * detail))
 
-  // A little wander along the cut so no two edges are identical.
   const w1 = (rand() - 0.5) * 0.03
   const w2 = (rand() - 0.5) * 0.022
   const phase = rand() * Math.PI * 2
@@ -114,7 +89,7 @@ function edgeProfile(tab: Tab, rand: () => number, detail: number): Pt[] {
   }
 
   const d = tab
-  const tc = 0.5 + (rand() - 0.5) * 0.09 // knob slides along the edge
+  const tc = 0.5 + (rand() - 0.5) * 0.09
   const r = 0.1 * (0.88 + rand() * 0.26)
   const height = 0.145 * (0.9 + rand() * 0.3)
   const neckHalf = 0.085 * (0.85 + rand() * 0.3)
@@ -129,16 +104,12 @@ function edgeProfile(tab: Tab, rand: () => number, detail: number): Pt[] {
     off: d * (height + Math.sin(angle) * r),
   })
 
-  // Sample counts are kept deliberately low: a hero field runs hundreds of
-  // these at once, and every contour point becomes six triangles once the
-  // outline is extruded and bevelled.
   const lead = steps(4, 2)
   for (let i = 0; i <= lead; i++) {
     const t = (i / lead) * A
     pts.push({ t, off: baseline(t) })
   }
 
-  // Neck in: quadratic from the baseline into the circle.
   const neck = steps(4, 2)
   const e0 = onCircle(start)
   const c0 = { t: A, off: d * height * 0.42 }
@@ -151,13 +122,11 @@ function edgeProfile(tab: Tab, rand: () => number, detail: number): Pt[] {
     })
   }
 
-  // The circle itself, swept over the top so the knob overhangs its neck.
   const arcSteps = steps(14, 7)
   for (let i = 1; i < arcSteps; i++) {
     pts.push(onCircle(start + ((end - start) * i) / arcSteps))
   }
 
-  // Neck out, mirroring the way in.
   const e1 = onCircle(end)
   const c1 = { t: B, off: d * height * 0.42 }
   for (let i = 0; i <= neck; i++) {
@@ -169,7 +138,6 @@ function edgeProfile(tab: Tab, rand: () => number, detail: number): Pt[] {
     })
   }
 
-  // Baseline out to the corner.
   const tail = steps(4, 2)
   for (let i = 1; i <= tail; i++) {
     const t = B + (i / tail) * (1 - B)
@@ -179,25 +147,16 @@ function edgeProfile(tab: Tab, rand: () => number, detail: number): Pt[] {
   return pts
 }
 
-/**
- * A single piece as a closed 2D outline, positioned at its place in the grid.
- *
- * Keeping the piece at its grid coordinates matters: ExtrudeGeometry derives
- * front-face UVs from the XY position, so the artwork lands on the piece at
- * exactly the spot it occupies in the finished picture.
- */
 export function pieceShape(
   edges: PieceEdges,
   originX: number,
   originY: number,
   seed: number,
-  /** Share of the full contour sampling to keep, for pieces drawn small. */
   detail = 1,
 ): THREE.Shape {
   const rand = mulberry32(seed)
   const shape = new THREE.Shape()
 
-  // Walk counter-clockwise so the outward normal is to the right of travel.
   const corners: Array<[number, number, number, number, Tab]> = [
     [0, 0, 1, 0, edges.bottom],
     [1, 0, 1, 1, edges.right],
@@ -209,7 +168,6 @@ export function pieceShape(
   for (const [ax, ay, bx, by, tab] of corners) {
     const dx = bx - ax
     const dy = by - ay
-    // Right of travel is outward for a CCW contour.
     const nx = dy
     const ny = -dx
 

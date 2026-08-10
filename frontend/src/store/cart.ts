@@ -13,10 +13,6 @@ export interface CartLine {
   productId: string
   size: SizeKey
   qty: number
-  /**
-   * A custom order's own picture. Catalogue lines paint their design from its
-   * recipe; a photograph has no recipe, so the line carries a small copy of it.
-   */
   thumbnail?: string
 }
 

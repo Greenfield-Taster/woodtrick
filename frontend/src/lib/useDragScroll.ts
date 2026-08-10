@@ -1,11 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 
-/**
- * Turns a horizontally scrolling element into something you can grab and throw.
- *
- * A rail that only responds to its scrollbar reads as broken to anyone used to
- * a carousel, and a trackpad user never finds the bar at all.
- */
 export function useDragScroll<T extends HTMLElement = HTMLDivElement>() {
   const ref = useRef<T>(null)
   const state = useRef({ down: false, startX: 0, startScroll: 0, moved: 0 })
@@ -58,7 +52,6 @@ export function useDragScroll<T extends HTMLElement = HTMLDivElement>() {
   }, [dragging])
 
   const onPointerDown = (event: React.PointerEvent<T>) => {
-    // Let touch keep the browser's own momentum scrolling.
     if (event.pointerType === 'touch') return
     const node = ref.current
     if (!node) return
@@ -66,16 +59,10 @@ export function useDragScroll<T extends HTMLElement = HTMLDivElement>() {
     setDragging(true)
   }
 
-  /**
-   * Cards are links, and a link answers a press-and-drag by starting a native
-   * drag-and-drop of itself — which cancels the pointer stream, so the rail
-   * would stop dead a few pixels in whenever the grab landed on a card.
-   */
   const onDragStart = (event: React.DragEvent<T>) => {
     event.preventDefault()
   }
 
-  /** Swallows the click that ends a drag, so throwing the rail never navigates. */
   const onClickCapture = (event: React.MouseEvent<T>) => {
     if (state.current.moved > 6) {
       event.preventDefault()

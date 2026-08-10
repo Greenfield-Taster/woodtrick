@@ -111,8 +111,6 @@ export function Catalog() {
 
       <div className="grid gap-12 md:grid-cols-12">
         <aside className="md:col-span-3">
-          {/* On a phone the whole filter column would stand between the
-              visitor and the first puzzle, so it folds away until asked for. */}
           <button
             type="button"
             onClick={() => setFiltersOpen((open) => !open)}

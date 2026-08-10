@@ -39,7 +39,6 @@ export function Collections() {
                 <div
                   className={[
                     'relative overflow-hidden rounded-sm bg-ink-soft',
-                    // Staggered heights break the grid into something less catalogue-like.
                     index % 3 === 1 ? 'aspect-[4/5]' : 'aspect-square',
                   ].join(' ')}
                 >

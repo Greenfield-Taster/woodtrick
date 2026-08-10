@@ -10,13 +10,6 @@ interface MobileMenuProps {
   links: Array<{ to: string; label: string }>
 }
 
-/**
- * The nav on a phone.
- *
- * It carries more than the header does — the collections live here too, since
- * the footer is a long scroll away and this is the only place on a phone where
- * looking for "mandalas" is a natural move.
- */
 export function MobileMenu({ open, onClose, links }: MobileMenuProps) {
   const currency = useCart((s) => s.currency)
   const setCurrency = useCart((s) => s.setCurrency)
@@ -36,8 +29,6 @@ export function MobileMenu({ open, onClose, links }: MobileMenuProps) {
 
   return (
     <div
-      // Below the header, never over it: the panel slides out from underneath,
-      // and the button that opened it stays reachable to close it again.
       className={['fixed inset-0 z-40 md:hidden', open ? '' : 'pointer-events-none'].join(' ')}
       aria-hidden={!open}
     >
@@ -52,15 +43,11 @@ export function MobileMenu({ open, onClose, links }: MobileMenuProps) {
       <nav
         aria-label="Main"
         className="absolute inset-x-0 top-0 border-b border-ink-line bg-ink-soft transition-transform duration-500"
-        // Stated outright rather than through a utility pair: this panel slides
-        // from behind a header that is itself fixed, and the one thing it must
-        // never be is ambiguous about where it sits.
         style={{
           transform: open ? 'translateY(0)' : 'translateY(-100%)',
           transitionTimingFunction: 'cubic-bezier(0.16, 1, 0.3, 1)',
         }}
       >
-        {/* Clears the header, which stays on top of this. */}
         <div className="container-page pt-20 pb-8">
           <ul className="divide-y divide-ink-line border-y border-ink-line">
             {links.map((link) => (

@@ -1,22 +1,10 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 
 interface OrbitDragOptions {
-  /** Radians of turn per pixel of pointer travel. */
   speed?: number
-  /** How far the object may be tipped away from level, in radians. */
   pitchLimit?: number
 }
 
-/**
- * Lets a pointer turn a 3D object by hand.
- *
- * The turn is handed back as an *offset* rather than an absolute rotation, so
- * whatever already drives the object — a scroll position, an idle sway — keeps
- * driving it afterwards, now measured from wherever the visitor left it.
- *
- * It is a ref on purpose: the frame loop reads it sixty times a second and must
- * not re-render the React tree to do so.
- */
 export function useOrbitDrag<T extends HTMLElement = HTMLDivElement>({
   speed = 0.008,
   pitchLimit = 0.7,
@@ -37,8 +25,6 @@ export function useOrbitDrag<T extends HTMLElement = HTMLDivElement>({
       )
       last.current = { x: event.clientX, y: event.clientY }
     }
-    // pointercancel matters as much as pointerup here: on touch the browser
-    // takes the gesture back the moment it decides you are scrolling the page.
     const stop = () => setDragging(false)
 
     window.addEventListener('pointermove', move)

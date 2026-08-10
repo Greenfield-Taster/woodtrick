@@ -1,21 +1,10 @@
-/**
- * Static catalogue for the design demo. No network, no CMS.
- *
- * Artwork is described, not stored: every product carries a recipe that the
- * canvas renderer in `src/art` turns into the picture on the puzzle face. That
- * keeps the repo free of image assets and lets a product look identical on a
- * card, on the product page and inside the 3D scene.
- */
-
 export type SizeKey = 's' | 'm' | 'l' | 'king'
 
 export interface PuzzleSize {
   key: SizeKey
   label: string
   pieces: number
-  /** Finished dimensions in centimetres, width × height. */
   cm: [number, number]
-  /** Typical assembly time, in hours. */
   hours: [number, number]
   priceUsd: number
 }
@@ -32,13 +21,10 @@ export interface Product {
   slug: string
   name: string
   collection: CollectionId
-  /** One line for cards. */
   tagline: string
-  /** Two or three sentences for the product page. */
   story: string
   artwork: Artwork
   sizes: PuzzleSize[]
-  /** Marks the six items on the home page rail. */
   bestseller?: boolean
   isNew?: boolean
 }
@@ -48,7 +34,6 @@ export type CollectionId = 'animals' | 'mandalas' | 'nature' | 'classic' | 'geom
 export interface Collection {
   id: CollectionId
   name: string
-  /** Shown under the collection name. */
   note: string
   accent: string
 }
@@ -62,7 +47,6 @@ export const COLLECTIONS: Collection[] = [
   { id: 'gifts', name: 'Gifts', note: 'Arrives ready to hand over', accent: '#EA7A49' },
 ]
 
-/** Size tiers are shared across the catalogue; only the price scales per product. */
 function sizes(base: number): PuzzleSize[] {
   const round = (n: number) => Math.round(n) - 0.01
   return [
@@ -73,7 +57,6 @@ function sizes(base: number): PuzzleSize[] {
   ]
 }
 
-/** Palettes are always [main, secondary, shadow, ground]. */
 const EMBER = ['#D8602C', '#E0C398', '#7A4E28', '#241812']
 const MOSS = ['#5A6B4C', '#C39A63', '#2F3A28', '#1C231A']
 const NIGHT = ['#3A4A6B', '#C39A63', '#1B2438', '#121826']
@@ -351,17 +334,6 @@ export const PRODUCTS: Product[] = [
   },
 ]
 
-/**
- * The one product that is not a design.
- *
- * Deliberately outside PRODUCTS: the shop is a catalogue of pictures to choose
- * from, and this one has no picture until somebody brings theirs. It carries a
- * recipe anyway so a line in the cart always has something to show, in the
- * unlikely event it is added without one.
- *
- * The tiers match the catalogue piece for piece — the cut is the same, only
- * the origin of the picture differs — and the premium is the plate.
- */
 export const CUSTOM_PUZZLE: Product = {
   id: 'custom',
   slug: 'custom',
@@ -374,7 +346,6 @@ export const CUSTOM_PUZZLE: Product = {
   sizes: sizes(44),
 }
 
-/** Cart lines for custom orders are keyed off this, one id per uploaded picture. */
 export const CUSTOM_ID_PREFIX = 'custom-'
 
 export const CURRENCIES = {

@@ -1,10 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
 
-/**
- * Tracks whether an element is on screen, so a WebGL canvas can stop rendering
- * when nobody is looking at it. Without this the hero keeps drawing its full
- * scene — shadow pass included — while the visitor reads the footer.
- */
 export function useInViewport<T extends HTMLElement = HTMLDivElement>(margin = '200px') {
   const ref = useRef<T>(null)
   const [visible, setVisible] = useState(true)
