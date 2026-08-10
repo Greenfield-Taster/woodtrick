@@ -31,6 +31,13 @@
   --ease-out-soft: cubic-bezier(0.16, 1, 0.3, 1);
 }
 
+/*
+ * A phone held sideways. Width breakpoints cannot see it — 740x360 sits below
+ * `md` and gets the stacked phone layout, which eats the height the hero has
+ * left to put the wordmark in.
+ */
+@custom-variant short (@media (height <= 34rem));
+
 @layer base {
   :root {
     color-scheme: dark;

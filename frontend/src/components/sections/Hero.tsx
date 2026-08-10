@@ -37,11 +37,14 @@ export function Hero() {
           screen readers and for anyone who never gets the canvas. */}
       <h1 className="sr-only">Unidragon — wooden puzzles cut one piece at a time</h1>
 
-      <div ref={copy} className="pointer-events-none absolute inset-x-0 bottom-0 pb-14 md:pb-20">
+      <div
+        ref={copy}
+        className="pointer-events-none absolute inset-x-0 bottom-0 pb-14 short:pb-6 md:pb-20"
+      >
         <div className="container-page">
-          <div className="grid gap-10 md:grid-cols-12 md:items-end">
+          <div className="grid gap-10 short:grid-cols-12 short:items-end short:gap-6 md:grid-cols-12 md:items-end">
             <p
-              className="pointer-events-auto max-w-md text-balance text-lg leading-snug text-paper/80 opacity-0 md:col-span-5 md:text-xl"
+              className="pointer-events-auto max-w-md text-balance text-lg leading-snug text-paper/80 opacity-0 short:col-span-6 short:text-base md:col-span-5 md:text-xl"
               style={{ animation: 'heroIn 1s var(--ease-out-soft) 2.15s forwards' }}
             >
               Laser-cut hardwood puzzles where no two pieces are alike — and every
@@ -49,7 +52,7 @@ export function Hero() {
             </p>
 
             <div
-              className="pointer-events-auto flex flex-wrap items-center gap-3 opacity-0 md:col-span-4 md:col-start-9 md:justify-end"
+              className="pointer-events-auto flex flex-wrap items-center gap-3 opacity-0 short:col-span-5 short:col-start-8 short:justify-end md:col-span-4 md:col-start-9 md:justify-end"
               style={{ animation: 'heroIn 1s var(--ease-out-soft) 2.35s forwards' }}
             >
               <Link

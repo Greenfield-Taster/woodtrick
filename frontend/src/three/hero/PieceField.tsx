@@ -1,11 +1,10 @@
 import { useEffect, useMemo, useRef } from 'react'
 import { useFrame } from '@react-three/fiber'
 import * as THREE from 'three'
-import { buildPiecePool, disposeGeometries } from '../piece/geometry'
+import { buildEdgeVariants, disposeGeometries, EDGE_VARIANTS } from '../piece/geometry'
+import { edgesAt, variantOf } from '../piece/outline'
 import { woodPieceMaterials } from '../piece/woodMaterial'
 import type { WordmarkSample } from './useWordmarkPoints'
-
-const VARIANTS = 16
 
 const INTRO_STAGGER = 0.8
 const INTRO_FLIGHT = 1.25
@@ -52,7 +51,7 @@ export function PieceField({ sample, count, animate, pointer, onProgress }: Piec
   const lastProgress = useRef(-1)
   const flip = useRef({ index: -1, at: 0 })
 
-  const geometries = useMemo(() => buildPiecePool(VARIANTS, 4211), [])
+  const geometries = useMemo(() => buildEdgeVariants(4211), [])
   const wood = useMemo(() => woodPieceMaterials('oak'), [])
 
   useEffect(() => {
@@ -69,16 +68,24 @@ export function PieceField({ sample, count, animate, pointer, onProgress }: Piec
     // Even coverage of the wordmark whatever the piece budget is.
     const stride = points.length / total
     const chosen: Array<[number, number]> = []
-    for (let i = 0; i < total; i++) chosen.push(points[Math.floor(i * stride)])
+    const chosenCells: Array<[number, number]> = []
+    for (let i = 0; i < total; i++) {
+      const at = Math.floor(i * stride)
+      chosen.push(points[at])
+      chosenCells.push(sample.cells[at])
+    }
 
     const xs = chosen.map((p) => p[0])
     const minX = Math.min(...xs)
     const maxX = Math.max(...xs)
     const span = Math.max(0.001, maxX - minX)
 
-    const buckets: number[][] = Array.from({ length: VARIANTS }, () => [])
+    const buckets: number[][] = Array.from({ length: EDGE_VARIANTS }, () => [])
     const pieces: PieceState[] = chosen.map(([x, y], i) => {
-      const variant = i % VARIANTS
+      // The shape is dictated by where the piece sits, not by which piece it
+      // is: its tabs are the blanks of the pieces beside it.
+      const [col, row] = chosenCells[i]
+      const variant = variantOf(edgesAt(col, row))
       const slot = buckets[variant].length
       buckets[variant].push(i)
 
@@ -123,9 +130,10 @@ export function PieceField({ sample, count, animate, pointer, onProgress }: Piec
       }
     })
 
-    // Just over the sampling step, so pieces touch without bleeding across the
-    // counters inside D, R, A, G and O.
-    return { pieces, buckets, scale: sample.spacing * 1.05 }
+    // The body of a piece is the sampling step, so that a tab lands in the
+    // blank cut for it. The few percent over closes the hairline the wander
+    // along each cut would otherwise leave between two pieces.
+    return { pieces, buckets, scale: sample.spacing * 1.04 }
   }, [sample, count])
 
   const scratch = useMemo(

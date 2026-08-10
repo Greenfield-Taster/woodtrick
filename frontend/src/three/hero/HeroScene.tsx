@@ -45,7 +45,12 @@ function FitCamera({ width, height, reserve }: FitCameraProps) {
     // centres itself in the whole section and collides with one or the other
     // on any short viewport — a phone held sideways is the worst case, where
     // the two together take two thirds of the height.
-    const band = Math.max(0.32, 1 - reserve.top - reserve.bottom)
+    //
+    // The floor is only here to keep the arithmetic from blowing up if the copy
+    // ever fills the section. It must stay well under any band a real layout
+    // produces: a floor the band actually hits is the camera being told there
+    // is room where there is none, and the word lands on the copy.
+    const band = Math.max(0.08, 1 - reserve.top - reserve.bottom)
 
     const byWidth = (width * margin) / (half * aspect)
     const byHeight = (height * 1.3) / (half * band)
@@ -138,7 +143,10 @@ function Stage({
       {sample && sample.points.length > 0 && (
         <PieceField
           sample={sample}
-          count={quality.heroPieces}
+          // Every sampled cell gets a piece. Thinning the field to a budget
+          // here would punch holes back into the letters the sampler just
+          // sized its pieces to fill.
+          count={sample.points.length}
           animate={quality.animate}
           pointer={pointer}
         />

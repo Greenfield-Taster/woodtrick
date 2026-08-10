@@ -8,6 +8,11 @@ export type QualityTier = 'high' | 'low' | 'still'
 
 export interface QualitySettings {
   tier: QualityTier
+  /**
+   * Ceiling on hero pieces, not a target. The wordmark asks for the size of
+   * piece its letters can be read at and takes however many that comes to;
+   * this only caps it on a device that cannot draw them.
+   */
   heroPieces: number
   dpr: [number, number]
   shadows: boolean
@@ -25,9 +30,9 @@ function detect(): QualityTier {
 }
 
 const SETTINGS: Record<QualityTier, Omit<QualitySettings, 'tier'>> = {
-  high: { heroPieces: 560, dpr: [1, 2], shadows: true, animate: true },
-  low: { heroPieces: 200, dpr: [1, 1.5], shadows: false, animate: true },
-  still: { heroPieces: 440, dpr: [1, 1.5], shadows: false, animate: false },
+  high: { heroPieces: 900, dpr: [1, 2], shadows: true, animate: true },
+  low: { heroPieces: 700, dpr: [1, 1.5], shadows: false, animate: true },
+  still: { heroPieces: 700, dpr: [1, 1.5], shadows: false, animate: false },
 }
 
 export function useQuality(): QualitySettings {

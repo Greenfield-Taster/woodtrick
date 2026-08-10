@@ -125,14 +125,62 @@ export function buildPuzzle(options: PuzzleOptions): { pieces: PieceGeometry[]; 
   return { pieces, grid }
 }
 
+/** Every combination of tab and blank on four edges. */
+export const EDGE_VARIANTS = 16
+
 /**
- * A small pool of standalone piece shapes for scenes that only need pieces to
- * look like pieces — the hero field, decorative accents. Reusing a handful of
- * geometries keeps the draw call count down.
+ * One geometry per edge combination, indexed by `variantOf`, so a field can
+ * place the piece that fits its neighbours instead of an arbitrary one.
+ *
+ * Sixteen geometries is also sixteen instanced meshes however many pieces the
+ * field ends up holding, which is what keeps the draw call count flat.
  */
-export function buildPiecePool(count: number, seed: number, thickness = 0.16): THREE.BufferGeometry[] {
-  const { pieces } = buildPuzzle({ rows: Math.ceil(Math.sqrt(count)), cols: Math.ceil(Math.sqrt(count)), seed, thickness })
-  return pieces.slice(0, count).map((p) => p.geometry)
+export function buildEdgeVariants(seed: number, thickness = 0.16): THREE.BufferGeometry[] {
+  const out: THREE.BufferGeometry[] = []
+
+  for (let v = 0; v < EDGE_VARIANTS; v++) {
+    const shape = pieceShape(
+      {
+        bottom: v & 1 ? 1 : -1,
+        right: v & 2 ? 1 : -1,
+        top: v & 4 ? 1 : -1,
+        left: v & 8 ? 1 : -1,
+      },
+      0,
+      0,
+      seed + v * 977,
+      // A wordmark piece covers a handful of pixels. Sampling its knobs as
+      // finely as a piece filling a product shot spends triangles nobody can
+      // see, and there are several hundred of them.
+      0.5,
+    )
+
+    let geometry: THREE.BufferGeometry = new THREE.ExtrudeGeometry(shape, {
+      depth: thickness,
+      bevelEnabled: true,
+      bevelThickness: thickness * 0.16,
+      bevelSize: thickness * 0.1,
+      bevelSegments: 1,
+      curveSegments: 1,
+      steps: 1,
+    })
+
+    // Each variant reads its own quarter-by-quarter patch of the grain, so a
+    // field built from sixteen shapes still looks cut from one sheet rather
+    // than stamped from one piece.
+    const uv = geometry.getAttribute('uv')
+    for (let i = 0; i < uv.count; i++) {
+      uv.setXY(i, (uv.getX(i) + (v % 4)) / 4, (uv.getY(i) + Math.floor(v / 4)) / 4)
+    }
+    uv.needsUpdate = true
+
+    geometry = splitCaps(geometry)
+    geometry.translate(-0.5, -0.5, -thickness / 2)
+    geometry.computeBoundingSphere()
+    out.push(geometry)
+  }
+
+  return out
 }
 
 export function disposeGeometries(geometries: THREE.BufferGeometry[]) {
