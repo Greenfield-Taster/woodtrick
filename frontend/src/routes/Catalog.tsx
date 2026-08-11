@@ -218,11 +218,25 @@ export function Catalog() {
               Nothing matches that combination. Widen the price or clear a filter.
             </p>
           ) : (
+            /*
+             * A catalogue is read by comparison, so every card is the same
+             * card: one frame proportion, one baseline, nothing stepped out of
+             * line. The staggering belongs to the rails on the home page, where
+             * it is one row and reads as arrangement rather than as drift.
+             *
+             * Each card spans three rows of this grid and subgrids onto them,
+             * so picture, name and tagline are laid on tracks shared with the
+             * cards beside it. A name that wraps to three lines then lifts the
+             * whole row's taglines rather than dropping its own out of step —
+             * which no fixed reserve can promise at every width.
+             */
             <div className="grid gap-x-6 gap-y-14 sm:grid-cols-2 xl:grid-cols-3">
-              {results.map((product, index) => (
-                <div key={product.id} className={index % 5 === 2 ? 'sm:pt-14' : undefined}>
-                  <ProductCard product={product} tall={index % 5 === 2} />
-                </div>
+              {results.map((product) => (
+                <ProductCard
+                  key={product.id}
+                  product={product}
+                  className="grid row-span-3 grid-rows-subgrid gap-y-0"
+                />
               ))}
             </div>
           )}

@@ -7,9 +7,15 @@ import { ProductPhoto } from './ProductPhoto'
 interface ProductCardProps {
   product: Product
   tall?: boolean
+  /*
+   * Laid on the card's root, so a parent can say how the card sits in it —
+   * the catalogue makes each one a subgrid to line the rows up across a row
+   * of cards. Left off, the card is an ordinary block and lays itself out.
+   */
+  className?: string
 }
 
-export function ProductCard({ product, tall = false }: ProductCardProps) {
+export function ProductCard({ product, tall = false, className }: ProductCardProps) {
   const currency = useCart((s) => s.currency)
 
   const cheapest = product.variants.reduce((low, v) => (v.priceUsd < low.priceUsd ? v : low))
@@ -18,7 +24,7 @@ export function ProductCard({ product, tall = false }: ProductCardProps) {
   return (
     <Link
       to={`/puzzle/${product.slug}`}
-      className="group block focus-visible:outline-none"
+      className={['group focus-visible:outline-none', className ?? 'block'].join(' ')}
       aria-label={`${product.name} — ${product.tagline}`}
     >
       <div
@@ -47,7 +53,11 @@ export function ProductCard({ product, tall = false }: ProductCardProps) {
         </span>
       </div>
 
-      <div className="mt-4 flex items-baseline justify-between gap-4">
+      {/*
+        Two lines are held for the name whether or not it needs them, so a
+        wrapping title cannot push its own tagline below the ones beside it.
+      */}
+      <div className="mt-4 flex min-h-10 items-baseline justify-between gap-4">
         <h3 className="font-display text-xl leading-none">{product.name}</h3>
         <span className="shrink-0 text-sm text-ember">
           {onSale && (
