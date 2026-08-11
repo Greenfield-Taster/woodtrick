@@ -1,6 +1,8 @@
 import { useEffect, useState } from 'react'
 import { Link, NavLink, useLocation } from 'react-router-dom'
 import { countItems, useCart } from '../../store/cart'
+import { SOCIAL } from '../../data/social'
+import { SocialIcon } from '../ui/SocialIcon'
 import { MobileMenu } from './MobileMenu'
 import { ThemeToggle } from './ThemeToggle'
 
@@ -41,7 +43,7 @@ export function Header() {
             : 'border-b border-transparent',
         ].join(' ')}
       >
-        <div className="container-page flex h-16 items-center justify-between gap-4 md:h-20 md:gap-6">
+        <div className="container-page-wide flex h-16 items-center justify-between gap-4 md:h-20 md:gap-6">
           <Link
             to="/"
             className="font-display text-lg tracking-tight text-paper transition-opacity hover:opacity-70 md:text-xl"
@@ -97,6 +99,21 @@ export function Header() {
                 {count}
               </span>
             </button>
+
+            <div className="ml-4 hidden items-center gap-0.5 lg:flex">
+              {SOCIAL.map((account) => (
+                <a
+                  key={account.id}
+                  href={account.url}
+                  target="_blank"
+                  rel="noreferrer noopener"
+                  aria-label={`Unidragon on ${account.name}`}
+                  className="grid h-9 w-9 place-items-center rounded-full text-paper/55 transition-colors hover:bg-ink-soft hover:text-ember"
+                >
+                  <SocialIcon id={account.id} className="h-[17px] w-[17px]" />
+                </a>
+              ))}
+            </div>
 
             <button
               type="button"

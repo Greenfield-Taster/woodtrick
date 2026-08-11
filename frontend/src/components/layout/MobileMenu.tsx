@@ -1,6 +1,8 @@
 import { useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import { COLLECTIONS } from '../../data/catalog'
+import { SOCIAL } from '../../data/social'
+import { SocialIcon } from '../ui/SocialIcon'
 import { useCart } from '../../store/cart'
 import { ThemeToggle } from './ThemeToggle'
 
@@ -74,6 +76,23 @@ export function MobileMenu({ open, onClose, links }: MobileMenuProps) {
                 >
                   {collection.name}
                 </Link>
+              </li>
+            ))}
+          </ul>
+
+          <h2 className="eyebrow mt-8">Follow</h2>
+          <ul className="mt-4 flex flex-wrap gap-2">
+            {SOCIAL.map((account) => (
+              <li key={account.id}>
+                <a
+                  href={account.url}
+                  target="_blank"
+                  rel="noreferrer noopener"
+                  className="flex items-center gap-2 rounded-full border border-ink-line px-3.5 py-1.5 text-sm text-paper/65 transition-colors hover:border-paper/40 hover:text-paper"
+                >
+                  <SocialIcon id={account.id} className="h-4 w-4" />
+                  {account.name}
+                </a>
               </li>
             ))}
           </ul>

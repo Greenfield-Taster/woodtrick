@@ -100,7 +100,6 @@
 }
 
 @layer base {
-
   html {
     scroll-behavior: smooth;
     -webkit-text-size-adjust: 100%;
@@ -126,7 +125,10 @@
   h2,
   h3 {
     font-family: var(--font-display);
-    font-variation-settings: 'SOFT' 12, 'WONK' 1, 'opsz' 84;
+    font-variation-settings:
+      'SOFT' 12,
+      'WONK' 1,
+      'opsz' 84;
     font-weight: 500;
     text-wrap: balance;
     letter-spacing: -0.02em;
@@ -171,6 +173,21 @@
   width: 100%;
   margin-inline: auto;
   max-width: 88rem;
+  padding-inline: 1.25rem;
+
+  @media (width >= 48rem) {
+    padding-inline: 2.5rem;
+  }
+
+  @media (width >= 80rem) {
+    padding-inline: 4rem;
+  }
+}
+
+@utility container-page-wide {
+  width: 100%;
+  margin-inline: auto;
+  max-width: 96rem;
   padding-inline: 1.25rem;
 
   @media (width >= 48rem) {
