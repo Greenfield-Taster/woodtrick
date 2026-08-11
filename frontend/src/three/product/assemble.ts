@@ -71,11 +71,3 @@ export function assemblePuzzle(rows: number, cols: number, seed: number): Assemb
     },
   }
 }
-
-export function previewGrid(pieces: number): { rows: number; cols: number } {
-  if (pieces <= 100) return { rows: 4, cols: 5 }
-  if (pieces <= 200) return { rows: 5, cols: 7 }
-  if (pieces <= 350) return { rows: 6, cols: 9 }
-  return { rows: 8, cols: 11 }
-}
-

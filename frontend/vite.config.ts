@@ -13,18 +13,13 @@ export default defineConfig({
   },
   build: {
     target: 'es2022',
-    rollupOptions: {
-      output: {
-        // Keeps the WebGL stack out of the entry chunk so routes without a
-        // canvas are not paying for it.
-        manualChunks(id) {
-          // Normalised because module ids use backslashes on Windows.
-          const path = id.replace(/\\/g, '/')
-          if (path.includes('node_modules/three/')) return 'three'
-          if (path.includes('node_modules/@react-three/')) return 'r3f'
-          return undefined
-        },
-      },
-    },
+    /*
+     * No manual chunking. Naming the WebGL packages as their own chunk did
+     * keep them out of the entry file, but a named chunk is counted as part
+     * of the initial set and was emitted as a `modulepreload` in index.html —
+     * so every page fetched all of three up front, catalogue included. The
+     * canvases are behind dynamic imports now, and letting the bundler cut
+     * the chunks itself is what actually makes them load on demand.
+     */
   },
 })

@@ -1,10 +1,14 @@
-import { useMemo, useState } from 'react'
+import { lazy, Suspense, useMemo, useState } from 'react'
 import { CUSTOM_ID_PREFIX, CUSTOM_PUZZLE, inchesToCm, type VariantKey } from '../data/catalog'
 import { blankSheetCanvas, boardBackCanvas, photoCanvas, type LoadedPhoto } from '../art/photo'
-import { PuzzleView } from '../three/product/PuzzleView'
-import { previewGrid } from '../three/product/assemble'
+import { previewGrid } from '../three/product/grid'
 import { PhotoDrop } from '../components/custom/PhotoDrop'
 import { formatPrice, useCart } from '../store/cart'
+
+/* Split for the reason given in Hero. */
+const PuzzleView = lazy(() =>
+  import('../three/product/PuzzleView').then((m) => ({ default: m.PuzzleView })),
+)
 
 const FACE_WIDTH = 1400
 
@@ -26,7 +30,10 @@ const STEPS = [
   ['Bring a picture', 'Drop it in. It stays in this browser — nothing is uploaded.'],
   ['Pick a size', 'The bigger the tier, the finer the cut and the longer the build.'],
   ['We cut it', 'Printed onto HDF board and cut on the same machines as the catalogue.'],
-  ['It ships in seven days', 'Every custom puzzle is made to order, so it leaves later than a stock design.'],
+  [
+    'It ships in seven days',
+    'Every custom puzzle is made to order, so it leaves later than a stock design.',
+  ],
 ]
 
 export function CustomPuzzle() {
@@ -37,8 +44,7 @@ export function CustomPuzzle() {
   const currency = useCart((s) => s.currency)
   const add = useCart((s) => s.add)
 
-  const size =
-    CUSTOM_PUZZLE.variants.find((v) => v.key === variantKey) ?? CUSTOM_PUZZLE.variants[2]
+  const size = CUSTOM_PUZZLE.variants.find((v) => v.key === variantKey) ?? CUSTOM_PUZZLE.variants[2]
   const pieces = size.pieces ?? 350
   const { rows, cols } = previewGrid(pieces)
   const faceHeight = Math.round((FACE_WIDTH * rows) / cols)
@@ -86,13 +92,15 @@ export function CustomPuzzle() {
             <div className="relative aspect-square overflow-hidden rounded-sm bg-gradient-to-b from-ink-soft to-ink">
               {faces ? (
                 <>
-                  <PuzzleView
-                    front={faces.front}
-                    back={faces.back}
-                    rows={rows}
-                    cols={cols}
-                    flipped={false}
-                  />
+                  <Suspense fallback={null}>
+                    <PuzzleView
+                      front={faces.front}
+                      back={faces.back}
+                      rows={rows}
+                      cols={cols}
+                      flipped={false}
+                    />
+                  </Suspense>
 
                   <div className="pointer-events-none absolute inset-x-0 bottom-0 flex items-center justify-between p-5">
                     <span className="text-xs text-paper/35">Drag to turn</span>

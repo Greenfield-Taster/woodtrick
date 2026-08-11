@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import { Canvas, useFrame } from '@react-three/fiber'
 import * as THREE from 'three'
 import { BOARD_GREY, silhouetteCanvas } from '../../art/photo'
+import { photoAtWidth } from '../../lib/photoSources'
 import { useInViewport } from '../../lib/useInViewport'
 import { useOrbitDrag } from '../../lib/useOrbitDrag'
 
@@ -29,7 +30,15 @@ function useTexture(src: string | undefined) {
     let live = true
     let loaded: THREE.Texture | null = null
 
-    new THREE.TextureLoader().load(src, (next) => {
+    /*
+     * A texture is fetched by hand, so none of the picking an `img` does for
+     * itself happens here. The frame is at most about 730 css px wide, which
+     * is a 1400-wide master on a retina screen and half that anywhere else —
+     * and the master is the heaviest file on the page.
+     */
+    const dpr = typeof window === 'undefined' ? 1 : Math.min(window.devicePixelRatio || 1, 2)
+
+    new THREE.TextureLoader().load(photoAtWidth(src, 730 * dpr), (next) => {
       if (!live) {
         next.dispose()
         return

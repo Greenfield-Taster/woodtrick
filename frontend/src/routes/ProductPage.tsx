@@ -1,7 +1,12 @@
-import { useEffect, useState } from 'react'
+import { lazy, Suspense, useEffect, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import { COLLECTIONS, PRODUCTS, inchesToCm, productBySlug, type VariantKey } from '../data/catalog'
-import { ProductSpin } from '../three/product/ProductSpin'
+
+/* Split for the reason given in Hero: the price and the button should not wait
+ * behind a renderer. The frame below keeps its square either way. */
+const ProductSpin = lazy(() =>
+  import('../three/product/ProductSpin').then((m) => ({ default: m.ProductSpin })),
+)
 import { ProductCard } from '../components/ui/ProductCard'
 import { ProductPhoto } from '../components/ui/ProductPhoto'
 import { formatPrice, useCart } from '../store/cart'
@@ -61,7 +66,9 @@ export function ProductPage() {
         <div className="grid gap-12 md:grid-cols-12 md:gap-10">
           <div className="min-w-0 md:col-span-7">
             <div className="relative aspect-square overflow-hidden rounded-sm bg-gradient-to-b from-ink-soft to-ink">
-              <ProductSpin src={product.photo} alt={product.name} />
+              <Suspense fallback={null}>
+                <ProductSpin src={product.photo} alt={product.name} />
+              </Suspense>
             </div>
             <p className="mt-4 text-center text-xs text-paper/35">
               Drag to turn it — the reverse is bare board

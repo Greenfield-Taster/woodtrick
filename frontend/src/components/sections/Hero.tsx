@@ -1,5 +1,14 @@
-import { useEffect, useRef, useState } from 'react'
-import { HeroScene } from '../../three/hero/HeroScene'
+import { lazy, Suspense, useEffect, useRef, useState } from 'react'
+
+/*
+ * The WebGL stack is a third of a megabyte, and it is the whole of what the
+ * hero needs and none of what the page needs to be readable. Split off here,
+ * it is fetched after the first paint rather than before it — the band holds
+ * its height and its ground either way, so nothing moves when it arrives.
+ */
+const HeroScene = lazy(() =>
+  import('../../three/hero/HeroScene').then((m) => ({ default: m.HeroScene })),
+)
 
 export function Hero() {
   const section = useRef<HTMLElement>(null)
@@ -27,7 +36,9 @@ export function Hero() {
       ref={section}
       className="relative min-h-[42svh] overflow-hidden bg-ink grain grain-fade short:min-h-[62svh] md:min-h-[46svh]"
     >
-      <HeroScene headroom={headroom} />
+      <Suspense fallback={null}>
+        <HeroScene headroom={headroom} />
+      </Suspense>
 
       <h1 className="sr-only">Unidragon — wooden puzzles cut one piece at a time</h1>
 

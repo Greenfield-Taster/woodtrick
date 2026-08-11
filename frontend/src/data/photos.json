@@ -1,0 +1,139 @@
+{
+  "/products/animals/chameleon-jigsaw.webp": {
+    "master": 1160,
+    "widths": [
+      400,
+      640,
+      900
+    ]
+  },
+  "/products/animals/charming-owl.webp": {
+    "master": 834,
+    "widths": [
+      400,
+      640
+    ]
+  },
+  "/products/animals/guarding-dragon.webp": {
+    "master": 864,
+    "widths": [
+      400,
+      640
+    ]
+  },
+  "/products/animals/impressive-cat.webp": {
+    "master": 1251,
+    "widths": [
+      400,
+      640,
+      900
+    ]
+  },
+  "/products/animals/lovely-tiger.webp": {
+    "master": 1124,
+    "widths": [
+      400,
+      640,
+      900
+    ]
+  },
+  "/products/animals/mysterious-lion.webp": {
+    "master": 1087,
+    "widths": [
+      400,
+      640,
+      900
+    ]
+  },
+  "/products/mandalas/mandala-conscious-love.webp": {
+    "master": 1400,
+    "widths": [
+      400,
+      640,
+      900
+    ]
+  },
+  "/products/mandalas/mandala-overarching-opposites.webp": {
+    "master": 1400,
+    "widths": [
+      400,
+      640,
+      900
+    ]
+  },
+  "/products/mandalas/mandala-space-dreams.webp": {
+    "master": 1394,
+    "widths": [
+      400,
+      640,
+      900
+    ]
+  },
+  "/products/mandalas/mandala-tree-of-life.webp": {
+    "master": 1400,
+    "widths": [
+      400,
+      640,
+      900
+    ]
+  },
+  "/products/new/italy-wooden-puzzle-travel-case-edition.webp": {
+    "master": 940,
+    "widths": [
+      400,
+      640,
+      900
+    ]
+  },
+  "/products/new/new-york-wooden-puzzle-travel-case-edition.webp": {
+    "master": 941,
+    "widths": [
+      400,
+      640,
+      900
+    ]
+  },
+  "/products/new/paris-wooden-puzzle-travel-case-edition.webp": {
+    "master": 824,
+    "widths": [
+      400,
+      640
+    ]
+  },
+  "/products/quezzle/quezzle-1.webp": {
+    "master": 482,
+    "widths": [
+      400
+    ]
+  },
+  "/products/quezzle/quezzle-2.webp": {
+    "master": 583,
+    "widths": [
+      400
+    ]
+  },
+  "/products/quezzle/quezzle-3.webp": {
+    "master": 589,
+    "widths": [
+      400
+    ]
+  },
+  "/products/quezzle/quezzle-amazing-cappadocia.webp": {
+    "master": 540,
+    "widths": [
+      400
+    ]
+  },
+  "/products/quezzle/quezzle-space-adventures.webp": {
+    "master": 530,
+    "widths": [
+      400
+    ]
+  },
+  "/products/quezzle/starry-night.webp": {
+    "master": 540,
+    "widths": [
+      400
+    ]
+  }
+}

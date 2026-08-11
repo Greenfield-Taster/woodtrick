@@ -1,3 +1,5 @@
+import { srcSetFor } from '../../lib/photoSources'
+
 interface ProductPhotoProps {
   src?: string
   alt?: string
@@ -17,6 +19,7 @@ export function ProductPhoto({ src, alt = '', className, sizes, eager }: Product
   return (
     <img
       src={src}
+      srcSet={srcSetFor(src)}
       alt={alt}
       className={className}
       sizes={sizes}
