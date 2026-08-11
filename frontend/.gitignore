@@ -12,6 +12,11 @@ dist
 dist-ssr
 *.local
 
+# The full-size PNGs the product shots are cut from — 60 MB of originals that
+# only ever leave here as the webps under public/products. Keep them on disk,
+# out of the history; git is the wrong place to store them.
+art-source
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json

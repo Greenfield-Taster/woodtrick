@@ -1,35 +1,49 @@
-export type SizeKey = 's' | 'm' | 'l' | 'king'
+/*
+ * Catalogue data restated from unidragon.us. Sizes, piece counts and prices are
+ * the shop's own figures; the wording around them is ours.
+ *
+ * There is no fixed size ladder any more. An animal is cut in four tiers, a
+ * mandala in three, a Quezzle sells as parts of a set — so each product carries
+ * the variants it is actually sold in.
+ */
 
-export interface PuzzleSize {
-  key: SizeKey
+export type VariantKey = string
+
+export interface Variant {
+  key: VariantKey
   label: string
-  pieces: number
-  cm: [number, number]
-  hours: [number, number]
   priceUsd: number
+  /* Struck-through list price where the shop is running a discount. */
+  wasUsd?: number
+  pieces?: number
+  /* Finished size in inches, as the US store lists it. Per board where a pack holds several. */
+  inches?: [number, number]
+  /*
+   * How many separate boards come in the pack. A Quezzle is sold in parts — one
+   * board to start, three more to finish — so the count is what tells the packs
+   * apart, and `inches` measures one of them rather than the finished wall.
+   */
+  boards?: number
+  /* Path under public/ for a pack that is photographed on its own, as the Quezzle parts are. */
+  photo?: string
+  soldOut?: boolean
 }
-
-export type Artwork =
-  | { kind: 'mandala'; seed: number; symmetry: number; rings: number; palette: string[] }
-  | { kind: 'marquetry'; figure: MarquetryFigure; palette: string[] }
-  | { kind: 'strata'; seed: number; bands: number; palette: string[] }
-
-export type MarquetryFigure = 'owl' | 'deer' | 'whale' | 'butterfly' | 'fox' | 'dragon' | 'ram'
 
 export interface Product {
   id: string
   slug: string
   name: string
-  collection: CollectionId
+  /* Absent for the custom puzzle, which is an offering rather than a catalogue entry. */
+  collection?: CollectionId
+  /* Path under public/, e.g. /products/animals/mysterious-lion.png */
+  photo?: string
   tagline: string
   story: string
-  artwork: Artwork
-  sizes: PuzzleSize[]
+  variants: Variant[]
   bestseller?: boolean
-  isNew?: boolean
 }
 
-export type CollectionId = 'animals' | 'mandalas' | 'nature' | 'classic' | 'geometry' | 'gifts'
+export type CollectionId = 'animals' | 'mandalas' | 'quezzle' | 'new'
 
 export interface Collection {
   id: CollectionId
@@ -39,298 +53,383 @@ export interface Collection {
 }
 
 export const COLLECTIONS: Collection[] = [
-  { id: 'animals', name: 'Animals', note: 'Creatures cut from a single sheet', accent: '#C39A63' },
-  { id: 'mandalas', name: 'Mandalas', note: 'Symmetry that resolves under your hands', accent: '#D8602C' },
-  { id: 'nature', name: 'Nature', note: 'Landscapes in layered grain', accent: '#5A6B4C' },
-  { id: 'classic', name: 'Classic', note: 'The shapes that started it', accent: '#7A4E28' },
-  { id: 'geometry', name: 'Geometry', note: 'Order, then the pleasure of breaking it', accent: '#E0C398' },
-  { id: 'gifts', name: 'Gifts', note: 'Arrives ready to hand over', accent: '#EA7A49' },
+  {
+    id: 'new',
+    name: 'New',
+    note: 'Latest off the cutting bed',
+    accent: '#E0C398',
+  },
+  {
+    id: 'animals',
+    name: 'Animals',
+    note: 'Creatures cut from a single sheet',
+    accent: '#C39A63',
+  },
+  {
+    id: 'mandalas',
+    name: 'Mandalas',
+    note: 'Symmetry that resolves under your hands',
+    accent: '#D8602C',
+  },
+  {
+    id: 'quezzle',
+    name: 'Quezzle',
+    note: 'A puzzle and a board game in one box',
+    accent: '#5A6B4C',
+  },
 ]
 
-function sizes(base: number): PuzzleSize[] {
-  const round = (n: number) => Math.round(n) - 0.01
+/* The animal ladder: four tiers, but every design is cut to its own dimensions. */
+function animalSizes(
+  rows: [pieces: number, w: number, h: number, price: number, was: number, soldOut?: boolean][],
+): Variant[] {
+  const keys = ['s', 'm', 'king', 'royal']
+  const labels = ['Size S', 'Size M', 'King Size', 'Royal Size']
+  return rows.map(([pieces, w, h, priceUsd, wasUsd, soldOut], i) => ({
+    key: keys[i],
+    label: labels[i],
+    pieces,
+    inches: [w, h] as [number, number],
+    priceUsd,
+    wasUsd,
+    ...(soldOut ? { soldOut } : {}),
+  }))
+}
+
+/*
+ * The shop runs sales on part of the range, not all of it. Everything below is
+ * written at its sale price with the list price alongside; this puts a product
+ * back on full price by promoting the list price and dropping the discount, so
+ * the two prices never have to be kept in step by hand.
+ */
+function atListPrice(variants: Variant[]): Variant[] {
+  return variants.map(({ wasUsd, ...rest }) => ({
+    ...rest,
+    priceUsd: wasUsd ?? rest.priceUsd,
+  }))
+}
+
+/* Every mandala is square and shares one ladder of three. */
+const MANDALA_SIZES: Variant[] = [
+  {
+    key: 'm',
+    label: 'Size M',
+    pieces: 200,
+    inches: [9.8, 9.8],
+    priceUsd: 35.99,
+    wasUsd: 49.99,
+  },
+  {
+    key: 'king',
+    label: 'King Size',
+    pieces: 350,
+    inches: [13, 13],
+    priceUsd: 49.99,
+    wasUsd: 69.99,
+  },
+  {
+    key: 'royal',
+    label: 'Royal Size',
+    pieces: 700,
+    inches: [17.7, 17.7],
+    priceUsd: 70.99,
+    wasUsd: 99.99,
+  },
+]
+
+/*
+ * The travel cases are the same board in a different city — one size, 500
+ * pieces, and a list price they all share. Only the sale price differs.
+ */
+function travelCase(priceUsd: number): Variant[] {
   return [
-    { key: 's', label: 'Size S', pieces: 100, cm: [20, 15], hours: [1, 2], priceUsd: round(base) },
-    { key: 'm', label: 'Size M', pieces: 200, cm: [30, 22], hours: [2, 3], priceUsd: round(base * 1.55) },
-    { key: 'l', label: 'Size L', pieces: 350, cm: [43, 31], hours: [4, 5], priceUsd: round(base * 2.35) },
-    { key: 'king', label: 'King Size', pieces: 700, cm: [60, 43], hours: [6, 8], priceUsd: round(base * 3.4) },
+    {
+      key: 'one',
+      label: 'One Size',
+      pieces: 500,
+      inches: [16.1, 16.5],
+      priceUsd,
+      wasUsd: 79.99,
+    },
   ]
 }
 
-const EMBER = ['#D8602C', '#E0C398', '#7A4E28', '#241812']
-const MOSS = ['#5A6B4C', '#C39A63', '#2F3A28', '#1C231A']
-const NIGHT = ['#3A4A6B', '#C39A63', '#1B2438', '#121826']
-const CLAY = ['#B4552F', '#E0C398', '#5E3320', '#241812']
-const SAGE = ['#7E9484', '#E7DCCD', '#3D5347', '#1B231F']
-
 export const PRODUCTS: Product[] = [
   {
-    id: 'p-owl',
-    slug: 'night-watch-owl',
-    name: 'Night Watch',
+    id: 'mysterious-lion',
+    slug: 'mysterious-lion',
+    name: 'Mysterious Lion',
     collection: 'animals',
-    tagline: 'An owl assembled from forty kinds of feather',
+    photo: '/products/animals/mysterious-lion.webp',
+    tagline: 'A mane with a whole savannah inside it',
     story:
-      'Every feather is its own piece, and no two are cut the same. The eyes are the last two pieces you place, which is why people tend to save them.',
-    artwork: { kind: 'marquetry', figure: 'owl', palette: NIGHT },
-    sizes: sizes(28),
+      'The lion sits at the centre of the circle, and the circle is drawn in the mane: antelopes and rhinos, hyenas and flamingos, meerkats and crocodiles, all worked into the curls. Finding them is most of the build.',
+    variants: atListPrice(
+      animalSizes([
+        [106, 7.5, 9.5, 28.99, 39.99],
+        [192, 9.7, 12.5, 35.99, 49.99],
+        [327, 12.2, 15.7, 49.99, 69.99],
+        [700, 17, 22, 70.99, 99.99],
+      ]),
+    ),
     bestseller: true,
   },
   {
-    id: 'p-dragon',
-    slug: 'coiled-dragon',
-    name: 'Coiled Dragon',
+    id: 'guarding-dragon',
+    slug: 'guarding-dragon',
+    name: 'Guarding Dragon',
     collection: 'animals',
-    tagline: 'The piece the workshop is named after',
+    photo: '/products/animals/guarding-dragon.webp',
+    tagline: 'Treasure hidden in the scales, as dragons prefer it',
     story:
-      'A spiral that reads as a single line until you look closer and find it is two hundred separate scales. The reverse side carries the same dragon in negative.',
-    artwork: { kind: 'marquetry', figure: 'dragon', palette: EMBER },
-    sizes: sizes(34),
+      'Shields, coins and tongues of fire are cut into the dragon rather than drawn beside it, so the hoard only shows itself once the scales start going down in the right order.',
+    variants: atListPrice(
+      animalSizes([
+        [97, 6.2, 10.3, 24.99, 39.99],
+        [183, 8.3, 13, 30.99, 49.99],
+        [330, 10.6, 17.3, 42.99, 69.99],
+        [700, 14.8, 24.2, 60.99, 99.99, true],
+      ]),
+    ),
     bestseller: true,
   },
   {
-    id: 'p-whale',
-    slug: 'deep-water-whale',
-    name: 'Deep Water',
+    id: 'charming-owl',
+    slug: 'charming-owl',
+    name: 'Charming Owl',
     collection: 'animals',
-    tagline: 'A whale that keeps getting larger as you build it',
+    photo: '/products/animals/charming-owl.webp',
+    tagline: 'The forest comes to the owl for advice',
     story:
-      'Built outward from the eye. The plywood grain runs with the body, so the finished panel catches light the way water does.',
-    artwork: { kind: 'marquetry', figure: 'whale', palette: SAGE },
-    sizes: sizes(30),
+      'A deer waiting on an answer, a hedgehog underfoot, a hare watching the treeline — and the wolves and foxes it is watching for, tucked among leaves and acorns.',
+    variants: atListPrice(
+      animalSizes([
+        [101, 5.9, 10.2, 24.99, 39.99],
+        [186, 8.3, 13.8, 30.99, 49.99],
+        [366, 9.9, 17.1, 42.99, 69.99],
+        [650, 13.9, 24, 60.99, 99.99, true],
+      ]),
+    ),
     bestseller: true,
   },
   {
-    id: 'p-deer',
-    slug: 'antler-season',
-    name: 'Antler Season',
+    id: 'iridescent-chameleon',
+    slug: 'iridescent-chameleon',
+    name: 'Iridescent Chameleon',
     collection: 'animals',
-    tagline: 'Antlers branch into the pieces that cut them',
+    photo: '/products/animals/chameleon-jigsaw.webp',
+    tagline: 'Colour that shifts as the lizard does',
     story:
-      'The antlers are the reason this one takes longer than its piece count suggests. They are also the reason people frame it.',
-    artwork: { kind: 'marquetry', figure: 'deer', palette: CLAY },
-    sizes: sizes(29),
+      'Reptiles, tropical birds and smaller crawling things hide in the pattern, all of them glowing in the colours the chameleon happens to be wearing. Start at the head — the eye is the piece that orients everything else.',
+    variants: animalSizes([
+      [107, 7.5, 9.5, 24.99, 39.99],
+      [202, 10.2, 13, 30.99, 49.99],
+      [314, 12.2, 16.1, 42.99, 69.99],
+      [700, 17.9, 26.5, 60.99, 99.99],
+    ]),
+    bestseller: true,
   },
   {
-    id: 'p-fox',
-    slug: 'first-frost-fox',
-    name: 'First Frost',
+    id: 'lovely-tiger',
+    slug: 'lovely-tiger',
+    name: 'Lovely Tiger',
     collection: 'animals',
-    tagline: 'Warm wood against a cold field',
+    photo: '/products/animals/lovely-tiger.webp',
+    tagline: 'Strength and tenderness in the same stripes',
     story:
-      'The lightest plywood we cut sits against our darkest stain. It is the highest-contrast puzzle in the catalogue and the easiest to finish in one evening.',
-    artwork: { kind: 'marquetry', figure: 'fox', palette: CLAY },
-    sizes: sizes(26),
-    isNew: true,
+      'One of the most recognisable predators alive, drawn as the force it stands for rather than as a portrait. The eyes are worth saving for last.',
+    variants: atListPrice(
+      animalSizes([
+        [104, 7.4, 9.3, 28.99, 39.99],
+        [181, 9.8, 12.3, 35.99, 49.99],
+        [273, 11.7, 14.7, 49.99, 69.99],
+        [700, 16.4, 20.6, 70.99, 99.99, true],
+      ]),
+    ),
+    bestseller: true,
   },
   {
-    id: 'p-butterfly',
-    slug: 'paper-wing',
-    name: 'Paper Wing',
+    id: 'impressive-cat',
+    slug: 'impressive-cat',
+    name: 'Impressive Cat',
     collection: 'animals',
-    tagline: 'Mirror-cut, so each half tests the other',
+    photo: '/products/animals/impressive-cat.webp',
+    tagline: 'Cats inside a cat, most of them famous',
     story:
-      'The two wings are cut as mirrors of one another. Halfway through you stop reading the picture and start reading the symmetry.',
-    artwork: { kind: 'marquetry', figure: 'butterfly', palette: EMBER },
-    sizes: sizes(25),
-  },
-  {
-    id: 'p-ram',
-    slug: 'high-pasture-ram',
-    name: 'High Pasture',
-    collection: 'animals',
-    tagline: 'Horns that spiral into their own puzzle',
-    story:
-      'Two spirals, cut against the grain so they hold the light differently from the rest of the panel.',
-    artwork: { kind: 'marquetry', figure: 'ram', palette: MOSS },
-    sizes: sizes(27),
+      'Sitting, stretching, playing, sleeping, leaping — the illustration is packed with cats, and a fair number of them are ones you will recognise.',
+    variants: atListPrice(
+      animalSizes([
+        [100, 7.5, 8.3, 32.99, 39.99],
+        [200, 9.5, 10.6, 40.99, 49.99],
+        [300, 12.2, 13.4, 56.99, 69.99],
+        [700, 18.1, 20.5, 80.99, 99.99],
+      ]),
+    ),
   },
 
   {
-    id: 'm-tree',
-    slug: 'mandala-rooted',
-    name: 'Rooted',
+    id: 'mandala-tree-of-life',
+    slug: 'mandala-tree-of-life',
+    name: 'Mandala Tree of Life',
     collection: 'mandalas',
-    tagline: 'A tree of life folded into twelve-fold symmetry',
+    photo: '/products/mandalas/mandala-tree-of-life.webp',
+    tagline: 'Branches and roots closing the same circle',
     story:
-      'Twelve identical sectors, none of which contains an identical piece. Solving it is a lesson in why symmetry and repetition are not the same thing.',
-    artwork: { kind: 'mandala', seed: 12, symmetry: 12, rings: 6, palette: MOSS },
-    sizes: sizes(35),
+      'Butterflies and stars, birds and flowers, animals and planets turn up as you build. Two kinds of piece are mixed on purpose — rigid and geometric against soft and flowing — and the lacquered pieces catch the light where the sap would run.',
+    variants: MANDALA_SIZES,
     bestseller: true,
   },
   {
-    id: 'm-sun',
-    slug: 'mandala-slow-sun',
-    name: 'Slow Sun',
+    id: 'mandala-conscious-love',
+    slug: 'mandala-conscious-love',
+    name: 'Mandala Conscious Love',
     collection: 'mandalas',
-    tagline: 'Sixteen rays, six rings, one centre piece',
+    photo: '/products/mandalas/mandala-conscious-love.webp',
+    tagline: 'Doves, butterflies and a romance told in rings',
     story:
-      'The centre is a single circular piece. Everyone finds it first and nobody places it first.',
-    artwork: { kind: 'mandala', seed: 7, symmetry: 16, rings: 5, palette: EMBER },
-    sizes: sizes(35),
+      'The story runs outward from the centre, and the larger the tier the further it gets: a beginning at Size M, something a good deal longer-lived by Royal Size.',
+    variants: atListPrice(MANDALA_SIZES),
     bestseller: true,
   },
   {
-    id: 'm-tide',
-    slug: 'mandala-tide-lock',
-    name: 'Tide Lock',
+    id: 'mandala-overarching-opposites',
+    slug: 'mandala-overarching-opposites',
+    name: 'Mandala Overarching Opposites',
     collection: 'mandalas',
-    tagline: 'Two rotations that never quite meet',
+    photo: '/products/mandalas/mandala-overarching-opposites.webp',
+    tagline: 'A yin and yang cut two different ways',
     story:
-      'Built on an eight-fold frame with a nine-fold overlay. The mismatch is deliberate and it is what makes the pattern hold your eye.',
-    artwork: { kind: 'mandala', seed: 23, symmetry: 8, rings: 7, palette: NIGHT },
-    sizes: sizes(33),
+      'The dark half is cut into angular pieces that look like parts of a mechanism; the light half into smooth, flowering shapes. Each side can be built on its own before the two are closed together.',
+    variants: MANDALA_SIZES,
   },
   {
-    id: 'm-bloom',
-    slug: 'mandala-late-bloom',
-    name: 'Late Bloom',
+    id: 'mandala-space-dreams',
+    slug: 'mandala-space-dreams',
+    name: 'Mandala Space Dreams',
     collection: 'mandalas',
-    tagline: 'Botanical geometry, cut in three plywood tones',
+    photo: '/products/mandalas/mandala-space-dreams.webp',
+    tagline: 'For the ambitions that need a bigger room',
     story:
-      'Three plywood tones in one panel. The pieces sort themselves by colour long before they sort themselves by shape.',
-    artwork: { kind: 'mandala', seed: 41, symmetry: 10, rings: 6, palette: SAGE },
-    sizes: sizes(36),
-    isNew: true,
+      'A mandala about going past the edge of the known — dedicated to discovery, and to the argument that anyone who has left the planet can manage most other things.',
+    variants: MANDALA_SIZES,
   },
 
   {
-    id: 'n-ridge',
-    slug: 'nine-ridges',
-    name: 'Nine Ridges',
-    collection: 'nature',
-    tagline: 'A mountain range in nine layers of grain',
+    id: 'quezzle-amazing-cappadocia',
+    slug: 'quezzle-amazing-cappadocia',
+    name: 'Quezzle Amazing Cappadocia',
+    collection: 'quezzle',
+    photo: '/products/quezzle/quezzle-amazing-cappadocia.webp',
+    tagline: 'A quest across the fairy chimneys, sold in parts',
     story:
-      'Each ridge is a separate depth of stain, so the finished panel has real distance in it. Best puzzle in the catalogue for hanging above a desk.',
-    artwork: { kind: 'strata', seed: 3, bands: 9, palette: MOSS },
-    sizes: sizes(31),
+      'Balloons drift over the rock valleys while the board hides secrets, interactive bits and a storyline that unfolds as the picture does. It comes on four boards of 250 pieces each: Part 1 opens the story on its own, the extension adds the remaining three, and the full set runs the twelve-step quest across all four.',
+    variants: [
+      {
+        key: 'part-1',
+        label: 'Part 1',
+        pieces: 250,
+        inches: [14.1, 9.9],
+        boards: 1,
+        photo: '/products/quezzle/quezzle-1.webp',
+        priceUsd: 42.99,
+        wasUsd: 59.99,
+      },
+      {
+        key: 'parts-2-4',
+        label: 'Extension Pack (Parts 2–4)',
+        pieces: 750,
+        inches: [14.1, 9.9],
+        boards: 3,
+        photo: '/products/quezzle/quezzle-2.webp',
+        priceUsd: 85.99,
+        wasUsd: 122.69,
+      },
+      {
+        key: 'full',
+        label: 'Full Pack (Parts 1–4)',
+        pieces: 1000,
+        inches: [14.1, 9.9],
+        boards: 4,
+        photo: '/products/quezzle/quezzle-3.webp',
+        priceUsd: 91.99,
+        wasUsd: 129.99,
+      },
+    ],
   },
   {
-    id: 'n-dunes',
-    slug: 'long-dunes',
-    name: 'Long Dunes',
-    collection: 'nature',
-    tagline: 'Sand, drawn as contour lines',
+    id: 'quezzle-space-adventures',
+    slug: 'quezzle-space-adventures',
+    name: 'Quezzle Space Adventures',
+    collection: 'quezzle',
+    photo: '/products/quezzle/quezzle-space-adventures.webp',
+    tagline: 'A thousand pieces and a board game in one box',
     story:
-      'No hard edges anywhere in the image, which means every piece has to be found by shape alone. It is the quiet difficult one.',
-    artwork: { kind: 'strata', seed: 11, bands: 12, palette: CLAY },
-    sizes: sizes(30),
+      'Prince Unidragon goes after the villain who took the princess, and the chase runs off into deep space. Inside the box: the puzzle, a quest played on the finished board, 3D spaceships and a set of arcade games.',
+    variants: atListPrice([
+      {
+        key: 'one',
+        label: 'One Size',
+        pieces: 1000,
+        inches: [27.9, 19.6],
+        priceUsd: 133.99,
+        wasUsd: 189.99,
+      },
+    ]),
   },
   {
-    id: 'n-fjord',
-    slug: 'cold-fjord',
-    name: 'Cold Fjord',
-    collection: 'nature',
-    tagline: 'Water and rock cut from the same sheet',
+    id: 'starry-night',
+    slug: 'starry-night',
+    name: 'Starry Night',
+    collection: 'quezzle',
+    photo: '/products/quezzle/starry-night.webp',
+    tagline: 'Van Gogh, cut so the brushwork stands up',
     story:
-      'The waterline runs straight across the panel, so you can build the top and bottom halves independently and meet in the middle.',
-    artwork: { kind: 'strata', seed: 19, bands: 10, palette: NIGHT },
-    sizes: sizes(32),
-    isNew: true,
-  },
-  {
-    id: 'n-canopy',
-    slug: 'under-canopy',
-    name: 'Under Canopy',
-    collection: 'nature',
-    tagline: 'Light through leaves, in seven greens',
-    story:
-      'Seven greens that read as one colour from across the room and as seven from arm’s length.',
-    artwork: { kind: 'strata', seed: 27, bands: 7, palette: SAGE },
-    sizes: sizes(29),
-  },
-
-  {
-    id: 'g-lattice',
-    slug: 'broken-lattice',
-    name: 'Broken Lattice',
-    collection: 'geometry',
-    tagline: 'A perfect grid, then one deliberate fault',
-    story:
-      'A regular lattice with a single fracture running through it. Your eye finds the fault immediately; your hands take considerably longer.',
-    artwork: { kind: 'mandala', seed: 55, symmetry: 4, rings: 8, palette: EMBER },
-    sizes: sizes(27),
-  },
-  {
-    id: 'g-orbit',
-    slug: 'orbit-study',
-    name: 'Orbit Study',
-    collection: 'geometry',
-    tagline: 'Concentric rings that refuse to be concentric',
-    story:
-      'Every ring is offset from the last by a fixed angle. The result looks like motion and behaves like a puzzle that will not let you work outside-in.',
-    artwork: { kind: 'mandala', seed: 63, symmetry: 6, rings: 9, palette: NIGHT },
-    sizes: sizes(28),
-  },
-
-  {
-    id: 'c-compass',
-    slug: 'compass-rose',
-    name: 'Compass Rose',
-    collection: 'classic',
-    tagline: 'The first pattern the workshop ever cut',
-    story:
-      'Still cut on the original file, still the one we send to people who have never built a wooden puzzle before.',
-    artwork: { kind: 'mandala', seed: 2, symmetry: 8, rings: 4, palette: CLAY },
-    sizes: sizes(24),
-  },
-  {
-    id: 'c-tidechart',
-    slug: 'harbour-chart',
-    name: 'Harbour Chart',
-    collection: 'classic',
-    tagline: 'Depth soundings, cut as contour',
-    story:
-      'Reads as an old sea chart. The deepest water is the darkest plywood, which makes the bottom third of the panel the hardest part.',
-    artwork: { kind: 'strata', seed: 33, bands: 11, palette: NIGHT },
-    sizes: sizes(26),
-  },
-
-  {
-    id: 'gift-evergreen',
-    slug: 'evergreen',
-    name: 'Evergreen',
-    collection: 'gifts',
-    tagline: 'The one we send when nobody knows what to send',
-    story:
-      'Twelve-fold and green, with no occasion attached to it. It is the design that goes out most often with a note rather than a name on it.',
-    artwork: { kind: 'mandala', seed: 88, symmetry: 12, rings: 5, palette: MOSS },
-    sizes: sizes(32),
+      'The finish is raised to imitate the strokes themselves. More than twenty-five miniature pieces are hidden in it — a self-portrait, the sunflowers, the chair and other things from a life that was not easy.',
+    variants: atListPrice([
+      {
+        key: 'one',
+        label: 'One Size',
+        pieces: 1000,
+        inches: [17.4, 22],
+        priceUsd: 143.99,
+        wasUsd: 159.99,
+      },
+    ]),
     bestseller: true,
   },
+
   {
-    id: 'gift-hearth',
-    slug: 'hearth',
-    name: 'Hearth',
-    collection: 'gifts',
-    tagline: 'Warm enough to hand over in December',
+    id: 'paris-travel-case',
+    slug: 'paris-wooden-puzzle-travel-case-edition',
+    name: 'Paris — Travel Case Edition',
+    collection: 'new',
+    photo: '/products/new/paris-wooden-puzzle-travel-case-edition.webp',
+    tagline: 'A whole city folded into a suitcase',
     story:
-      'Low light over a long horizon, cut in the reddest ply we stock. Arrives in the gift box with the sleeve already on it.',
-    artwork: { kind: 'strata', seed: 61, bands: 8, palette: CLAY },
-    sizes: sizes(30),
+      'The Eiffel Tower at golden hour, café terraces in the Marais, the Seine running past the bridges — all of it packed into an open travel case. Dozens of the pieces are cut as French things in their own right: the tower, a croissant, a Vespa, the Arc de Triomphe. The case is the box it arrives in, so the puzzle has somewhere to live afterwards.',
+    variants: travelCase(56.99),
   },
   {
-    id: 'gift-two-wings',
-    slug: 'two-wings',
-    name: 'Two Wings',
-    collection: 'gifts',
-    tagline: 'A second edition of Paper Wing, cut in sage',
+    id: 'italy-travel-case',
+    slug: 'italy-wooden-puzzle-travel-case-edition',
+    name: 'Italy — Travel Case Edition',
+    collection: 'new',
+    photo: '/products/new/italy-wooden-puzzle-travel-case-edition.webp',
+    tagline: 'Tuscan hills and terracotta, packed for the trip',
     story:
-      'The same mirror-cut wings in a quieter palette. People who already own one tend to buy this as the pair to it.',
-    artwork: { kind: 'marquetry', figure: 'butterfly', palette: SAGE },
-    sizes: sizes(27),
-    isNew: true,
+      'Sunlit piazzas, rooftops going orange in the evening and a stretch of Mediterranean coast, built inside an open case. Gondolas, scooters, arches of the Colosseum and a wine shop or two turn up among the pieces.',
+    variants: travelCase(56.99),
   },
   {
-    id: 'gift-first-light',
-    slug: 'first-light',
-    name: 'First Light',
-    collection: 'gifts',
-    tagline: 'For new homes and new starts',
+    id: 'new-york-travel-case',
+    slug: 'new-york-wooden-puzzle-travel-case-edition',
+    name: 'New York — Travel Case Edition',
+    collection: 'new',
+    photo: '/products/new/new-york-wooden-puzzle-travel-case-edition.webp',
+    tagline: 'Cabs, bridges and neon in a traveller’s case',
     story:
-      'A sunrise pattern on a ten-fold frame. The centre is a single amber piece, which is the one people hand to whoever they are giving it to.',
-    artwork: { kind: 'mandala', seed: 104, symmetry: 10, rings: 6, palette: EMBER },
-    sizes: sizes(33),
+      'Yellow cabs down a crowded avenue, the Statue of Liberty holding its corner, Broadway lit up and the Brooklyn Bridge reaching over the East River. The letters N and Y are in there as pieces, along with an aeroplane, a streetlamp and a slice of pizza.',
+    variants: travelCase(72.99),
   },
 ]
 
@@ -338,19 +437,58 @@ export const CUSTOM_PUZZLE: Product = {
   id: 'custom',
   slug: 'custom',
   name: 'Custom puzzle',
-  collection: 'gifts',
   tagline: 'Cut from a picture you bring',
   story:
-    'The same birch, the same cut, the same box. The only difference is that the picture on it is yours.',
-  artwork: { kind: 'strata', seed: 7, bands: 9, palette: CLAY },
-  sizes: sizes(44),
+    'The same board, the same cut, the same box. The only difference is that the picture on it is yours.',
+  variants: [
+    {
+      key: 's',
+      label: 'Size S',
+      pieces: 100,
+      inches: [7.9, 5.9],
+      priceUsd: 43.99,
+    },
+    {
+      key: 'm',
+      label: 'Size M',
+      pieces: 200,
+      inches: [11.8, 8.7],
+      priceUsd: 67.99,
+    },
+    {
+      key: 'king',
+      label: 'King Size',
+      pieces: 350,
+      inches: [16.9, 12.2],
+      priceUsd: 103.99,
+    },
+    {
+      key: 'royal',
+      label: 'Royal Size',
+      pieces: 700,
+      inches: [23.6, 16.9],
+      priceUsd: 149.99,
+    },
+  ],
 }
 
 export const CUSTOM_ID_PREFIX = 'custom-'
 
 export const CURRENCIES = {
-  USD: { code: 'USD', symbol: '$', rate: 1, locale: 'en-US', freeShippingFrom: 49 },
-  EUR: { code: 'EUR', symbol: '€', rate: 0.92, locale: 'de-DE', freeShippingFrom: 45 },
+  USD: {
+    code: 'USD',
+    symbol: '$',
+    rate: 1,
+    locale: 'en-US',
+    freeShippingFrom: 49,
+  },
+  EUR: {
+    code: 'EUR',
+    symbol: '€',
+    rate: 0.92,
+    locale: 'de-DE',
+    freeShippingFrom: 45,
+  },
 } as const
 
 export type CurrencyCode = keyof typeof CURRENCIES
@@ -364,5 +502,15 @@ export function productsIn(collection: CollectionId): Product[] {
 }
 
 export function priceFrom(product: Product): number {
-  return Math.min(...product.sizes.map((s) => s.priceUsd))
+  return Math.min(...product.variants.map((v) => v.priceUsd))
+}
+
+/* Largest piece count a product is cut to — what the catalogue filter sorts on. */
+export function maxPieces(product: Product): number {
+  const counts = product.variants.map((v) => v.pieces ?? 0)
+  return Math.max(0, ...counts)
+}
+
+export function inchesToCm(inches: number): number {
+  return Math.round(inches * 2.54 * 10) / 10
 }

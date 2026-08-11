@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react'
-import { CUSTOM_ID_PREFIX, CUSTOM_PUZZLE, type SizeKey } from '../data/catalog'
-import { blankSheetCanvas, photoBackCanvas, photoCanvas, type LoadedPhoto } from '../art/photo'
+import { CUSTOM_ID_PREFIX, CUSTOM_PUZZLE, inchesToCm, type VariantKey } from '../data/catalog'
+import { blankSheetCanvas, boardBackCanvas, photoCanvas, type LoadedPhoto } from '../art/photo'
 import { PuzzleView } from '../three/product/PuzzleView'
 import { previewGrid } from '../three/product/assemble'
 import { PhotoDrop } from '../components/custom/PhotoDrop'
@@ -25,33 +25,32 @@ const BAD = [
 const STEPS = [
   ['Bring a picture', 'Drop it in. It stays in this browser — nothing is uploaded.'],
   ['Pick a size', 'The bigger the tier, the finer the cut and the longer the build.'],
-  ['We cut it', 'Printed onto 3 mm birch ply and cut on the same machines as the catalogue.'],
+  ['We cut it', 'Printed onto HDF board and cut on the same machines as the catalogue.'],
   ['It ships in seven days', 'Every custom puzzle is made to order, so it leaves later than a stock design.'],
 ]
 
 export function CustomPuzzle() {
   const [front, setFront] = useState<LoadedPhoto | null>(null)
-  const [back, setBack] = useState<LoadedPhoto | null>(null)
-  const [sizeKey, setSizeKey] = useState<SizeKey>('l')
-  const [flipped, setFlipped] = useState(false)
+  const [variantKey, setVariantKey] = useState<VariantKey>('king')
   const [owned, setOwned] = useState(false)
 
   const currency = useCart((s) => s.currency)
   const add = useCart((s) => s.add)
 
-  const size = CUSTOM_PUZZLE.sizes.find((s) => s.key === sizeKey) ?? CUSTOM_PUZZLE.sizes[2]
-  const { rows, cols } = previewGrid(size.pieces)
+  const size =
+    CUSTOM_PUZZLE.variants.find((v) => v.key === variantKey) ?? CUSTOM_PUZZLE.variants[2]
+  const pieces = size.pieces ?? 350
+  const { rows, cols } = previewGrid(pieces)
   const faceHeight = Math.round((FACE_WIDTH * rows) / cols)
 
+  // printed on one side, so the reverse is the bare board rather than a second picture
   const faces = useMemo(() => {
     if (!front) return null
     return {
       front: photoCanvas(front.image, FACE_WIDTH, faceHeight),
-      back: back
-        ? photoCanvas(back.image, FACE_WIDTH, faceHeight)
-        : photoBackCanvas(front.image, FACE_WIDTH, faceHeight),
+      back: boardBackCanvas(FACE_WIDTH, faceHeight),
     }
-  }, [front, back, faceHeight])
+  }, [front, faceHeight])
 
   const sheet = useMemo(
     () => blankSheetCanvas(900, Math.round((900 * rows) / cols), rows, cols).toDataURL(),
@@ -74,7 +73,7 @@ export function CustomPuzzle() {
             We bring the wood.
           </h1>
           <p className="mt-6 max-w-xl text-[15px] leading-relaxed text-paper/55">
-            The same birch, the same cut, the same box as everything in the shop — with your
+            The same board, the same cut, the same box as everything in the shop — with your
             photograph on it instead of ours. Drop one in below and you will see it in pieces before
             you decide anything.
           </p>
@@ -90,19 +89,13 @@ export function CustomPuzzle() {
                   <PuzzleView
                     front={faces.front}
                     back={faces.back}
-                    pieces={size.pieces}
-                    flipped={flipped}
+                    rows={rows}
+                    cols={cols}
+                    flipped={false}
                   />
 
                   <div className="pointer-events-none absolute inset-x-0 bottom-0 flex items-center justify-between p-5">
                     <span className="text-xs text-paper/35">Drag to turn</span>
-                    <button
-                      type="button"
-                      onClick={() => setFlipped((v) => !v)}
-                      className="pointer-events-auto rounded-full border border-ink-line bg-ink/70 px-4 py-2 text-xs text-paper backdrop-blur transition-colors hover:border-ember"
-                    >
-                      {flipped ? 'Show the front' : 'Show the back'}
-                    </button>
                   </div>
                 </>
               ) : (
@@ -130,34 +123,27 @@ export function CustomPuzzle() {
               onPhoto={setFront}
             />
 
-            <div className="mt-8">
-              <PhotoDrop
-                label="The other side"
-                hint="Leave it empty and we tone your picture into the wood instead"
-                photo={back}
-                onPhoto={setBack}
-                optional
-              />
-            </div>
-
             <div className="mt-10">
               <div className="flex items-baseline justify-between">
                 <h2 className="eyebrow">Size</h2>
-                <span className="text-xs text-paper/40">
-                  {size.cm[0]}×{size.cm[1]} cm · {size.hours[0]}–{size.hours[1]} h
-                </span>
+                {size.inches && (
+                  <span className="text-xs text-paper/40">
+                    {size.inches[0]}×{size.inches[1]} in · {inchesToCm(size.inches[0])}×
+                    {inchesToCm(size.inches[1])} cm
+                  </span>
+                )}
               </div>
 
               <div className="mt-4 grid grid-cols-2 gap-2">
-                {CUSTOM_PUZZLE.sizes.map((option) => (
+                {CUSTOM_PUZZLE.variants.map((option) => (
                   <button
                     key={option.key}
                     type="button"
-                    onClick={() => setSizeKey(option.key)}
-                    aria-pressed={option.key === sizeKey}
+                    onClick={() => setVariantKey(option.key)}
+                    aria-pressed={option.key === variantKey}
                     className={[
                       'rounded-sm border px-4 py-3 text-left transition-colors',
-                      option.key === sizeKey
+                      option.key === variantKey
                         ? 'border-ember bg-ember/10'
                         : 'border-ink-line hover:border-paper/30',
                     ].join(' ')}
@@ -200,8 +186,8 @@ export function CustomPuzzle() {
 
             <dl className="mt-8 divide-y divide-ink-line border-t border-ink-line text-sm">
               {[
-                ['Material', '3 mm birch ply, laser-cut'],
-                ['Both sides finished', 'Yes — your second picture, or yours toned into the ply'],
+                ['Material', 'Laser-cut HDF'],
+                ['Printed', 'One side — the reverse is bare board'],
                 ['Made to order', 'Cut and shipped within 7 days'],
                 ['Returns', 'Custom cuts are final sale'],
               ].map(([label, value]) => (

@@ -6,12 +6,12 @@ import {
   PRODUCTS,
   type CurrencyCode,
   type Product,
-  type SizeKey,
+  type VariantKey,
 } from '../data/catalog'
 
 export interface CartLine {
   productId: string
-  size: SizeKey
+  variant: VariantKey
   qty: number
   thumbnail?: string
 }
@@ -20,9 +20,9 @@ interface CartState {
   lines: CartLine[]
   open: boolean
   currency: CurrencyCode
-  add(productId: string, size: SizeKey, qty?: number, thumbnail?: string): void
-  remove(productId: string, size: SizeKey): void
-  setQty(productId: string, size: SizeKey, qty: number): void
+  add(productId: string, variant: VariantKey, qty?: number, thumbnail?: string): void
+  remove(productId: string, variant: VariantKey): void
+  setQty(productId: string, variant: VariantKey, qty: number): void
   setOpen(open: boolean): void
   setCurrency(currency: CurrencyCode): void
 }
@@ -32,24 +32,24 @@ export const useCart = create<CartState>((set) => ({
   open: false,
   currency: 'USD',
 
-  add: (productId, size, qty = 1, thumbnail) =>
+  add: (productId, variant, qty = 1, thumbnail) =>
     set((state) => {
-      const existing = state.lines.find((l) => l.productId === productId && l.size === size)
+      const existing = state.lines.find((l) => l.productId === productId && l.variant === variant)
       const lines = existing
         ? state.lines.map((l) => (l === existing ? { ...l, qty: l.qty + qty } : l))
-        : [...state.lines, { productId, size, qty, thumbnail }]
+        : [...state.lines, { productId, variant, qty, thumbnail }]
       return { lines, open: true }
     }),
 
-  remove: (productId, size) =>
+  remove: (productId, variant) =>
     set((state) => ({
-      lines: state.lines.filter((l) => !(l.productId === productId && l.size === size)),
+      lines: state.lines.filter((l) => !(l.productId === productId && l.variant === variant)),
     })),
 
-  setQty: (productId, size, qty) =>
+  setQty: (productId, variant, qty) =>
     set((state) => ({
       lines: state.lines
-        .map((l) => (l.productId === productId && l.size === size ? { ...l, qty } : l))
+        .map((l) => (l.productId === productId && l.variant === variant ? { ...l, qty } : l))
         .filter((l) => l.qty > 0),
     })),
 
@@ -68,9 +68,9 @@ export function resolveLines(lines: CartLine[]): ResolvedLine[] {
     const product = line.productId.startsWith(CUSTOM_ID_PREFIX)
       ? CUSTOM_PUZZLE
       : PRODUCTS.find((p) => p.id === line.productId)
-    const size = product?.sizes.find((s) => s.key === line.size)
-    if (!product || !size) return []
-    return [{ ...line, product, unitUsd: size.priceUsd, label: size.label }]
+    const variant = product?.variants.find((v) => v.key === line.variant)
+    if (!product || !variant) return []
+    return [{ ...line, product, unitUsd: variant.priceUsd, label: variant.label }]
   })
 }
 

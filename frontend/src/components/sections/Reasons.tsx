@@ -8,13 +8,13 @@ const REASONS = [
   },
   {
     number: '02',
-    title: 'A second picture on the back',
-    body: 'Turn any piece over. The reverse carries its own artwork, so the puzzle can be built and framed either way round.',
+    title: 'Figures hidden in the picture',
+    body: 'Animals, plants and small scenes are cut as whole pieces inside the design. You find them one at a time, in your hand, before you find them in the picture.',
   },
   {
     number: '03',
-    title: 'Hardwood, not cardboard',
-    body: 'Three-millimetre ply, laser-cut and hand-finished. Pieces click rather than bend, and they will outlast the box.',
+    title: 'Board, not cardboard',
+    body: 'Laser-cut HDF, hand-finished. Pieces click rather than bend, and they will outlast the box.',
   },
 ]
 

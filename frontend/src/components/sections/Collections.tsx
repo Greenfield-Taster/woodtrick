@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { COLLECTIONS, PRODUCTS, priceFrom, productsIn } from '../../data/catalog'
 import { formatPrice, useCart } from '../../store/cart'
-import { ArtworkImage } from '../ui/ArtworkImage'
+import { ProductPhoto } from '../ui/ProductPhoto'
 import { useReveal } from '../../lib/useReveal'
 
 /*
@@ -25,27 +25,29 @@ export function Collections() {
       <div ref={ref} className="container-page reveal-stagger">
         <div className="flex items-end justify-between gap-8">
           <div className="reveal-item" style={{ transitionDelay: `${wait}s` }}>
-            <p className="eyebrow">Six ways in</p>
+            <p className="eyebrow">{COLLECTIONS.length} ways in</p>
             <h2 className="mt-5 text-4xl md:text-5xl">Collections</h2>
           </div>
-          <div
-            className="reveal-item hidden shrink-0 sm:block"
-            style={{ transitionDelay: `${wait + TILE_STEP}s` }}
-          >
-            <Link
-              to="/shop"
-              className="text-sm text-paper/60 underline-offset-8 transition-colors hover:text-paper hover:underline"
+          {PRODUCTS.length > 0 && (
+            <div
+              className="reveal-item hidden shrink-0 sm:block"
+              style={{ transitionDelay: `${wait + TILE_STEP}s` }}
             >
-              All {PRODUCTS.length} puzzles
-            </Link>
-          </div>
+              <Link
+                to="/shop"
+                className="text-sm text-paper/60 underline-offset-8 transition-colors hover:text-paper hover:underline"
+              >
+                All {PRODUCTS.length} puzzles
+              </Link>
+            </div>
+          )}
         </div>
 
         <div className="mt-14 grid gap-x-6 gap-y-12 sm:grid-cols-2 lg:grid-cols-3">
           {COLLECTIONS.map((collection, index) => {
             const items = productsIn(collection.id)
             const lead = items[0]
-            const from = items.length ? Math.min(...items.map(priceFrom)) : 0
+            const from = items.length ? Math.min(...items.map(priceFrom)) : null
 
             return (
               <Link
@@ -54,28 +56,22 @@ export function Collections() {
                 className="reveal-item group block"
                 style={{ transitionDelay: `${wait + (index + 2) * TILE_STEP}s` }}
               >
-                <div
-                  className={[
-                    'relative overflow-hidden rounded-sm bg-ink-soft',
-                    index % 3 === 1 ? 'aspect-[4/5]' : 'aspect-square',
-                  ].join(' ')}
-                >
+                {/*
+                  The name sits under the frame, not over it. These photographs
+                  are cut-outs drawn to contain, so the artwork stops wherever
+                  its own shape does — a caption laid inside the frame lands on
+                  the picture as often as it clears it.
+                */}
+                <div className="relative aspect-[4/5] overflow-hidden rounded-sm bg-ink-soft">
                   {lead ? (
-                    <div className="h-full w-full opacity-90 transition-all duration-[900ms] ease-[cubic-bezier(0.16,1,0.3,1)] will-change-transform group-hover:scale-105 group-hover:opacity-100">
-                      <ArtworkImage
-                        artwork={lead.artwork}
-                        ratio={index % 3 === 1 ? 4 / 5 : 1}
-                        className="h-full w-full object-cover"
+                    <div className="h-full w-full p-8 opacity-90 transition-all duration-[900ms] ease-[cubic-bezier(0.16,1,0.3,1)] will-change-transform group-hover:scale-105 group-hover:opacity-100">
+                      <ProductPhoto
+                        src={lead.photo}
+                        className="h-full w-full object-contain"
+                        sizes="(min-width: 1024px) 30vw, (min-width: 640px) 45vw, 90vw"
                       />
                     </div>
                   ) : null}
-
-                  <div className="absolute inset-0 bg-gradient-to-t from-ink/85 via-ink/10 to-transparent" />
-
-                  <div className="absolute inset-x-0 bottom-0 p-6">
-                    <h3 className="text-3xl">{collection.name}</h3>
-                    <p className="mt-1 text-sm text-paper/55">{collection.note}</p>
-                  </div>
 
                   <span
                     className="absolute left-6 top-6 h-2 w-2 rounded-full"
@@ -84,9 +80,17 @@ export function Collections() {
                   />
                 </div>
 
-                <p className="mt-3 flex items-baseline justify-between text-sm text-paper/45">
-                  <span>{items.length} designs</span>
-                  <span className="text-ember">from {formatPrice(from, currency)}</span>
+                <div className="mt-4 flex items-baseline justify-between gap-4">
+                  <h3 className="font-display text-2xl leading-none">{collection.name}</h3>
+                  {from !== null && (
+                    <span className="shrink-0 text-sm text-ember">
+                      from {formatPrice(from, currency)}
+                    </span>
+                  )}
+                </div>
+                <p className="mt-2 text-sm leading-snug text-paper/50">{collection.note}</p>
+                <p className="mt-1.5 text-xs text-paper/35">
+                  {items.length === 1 ? '1 design' : `${items.length} designs`}
                 </p>
               </Link>
             )

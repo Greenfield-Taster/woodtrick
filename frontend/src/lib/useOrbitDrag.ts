@@ -3,11 +3,14 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 interface OrbitDragOptions {
   speed?: number
   pitchLimit?: number
+  /* Half the sweep, in radians. Unbounded by default — a puzzle turns right round. */
+  yawLimit?: number
 }
 
 export function useOrbitDrag<T extends HTMLElement = HTMLDivElement>({
   speed = 0.008,
   pitchLimit = 0.7,
+  yawLimit = Infinity,
 }: OrbitDragOptions = {}) {
   const offset = useRef({ yaw: 0, pitch: 0 })
   const last = useRef({ x: 0, y: 0 })
@@ -18,7 +21,10 @@ export function useOrbitDrag<T extends HTMLElement = HTMLDivElement>({
 
     const move = (event: PointerEvent) => {
       const { x, y } = last.current
-      offset.current.yaw += (event.clientX - x) * speed
+      offset.current.yaw = Math.min(
+        yawLimit,
+        Math.max(-yawLimit, offset.current.yaw + (event.clientX - x) * speed),
+      )
       offset.current.pitch = Math.min(
         pitchLimit,
         Math.max(-pitchLimit, offset.current.pitch + (event.clientY - y) * speed * 0.75),
@@ -35,7 +41,7 @@ export function useOrbitDrag<T extends HTMLElement = HTMLDivElement>({
       window.removeEventListener('pointerup', stop)
       window.removeEventListener('pointercancel', stop)
     }
-  }, [dragging, speed, pitchLimit])
+  }, [dragging, speed, pitchLimit, yawLimit])
 
   const onPointerDown = useCallback((event: React.PointerEvent<T>) => {
     last.current = { x: event.clientX, y: event.clientY }

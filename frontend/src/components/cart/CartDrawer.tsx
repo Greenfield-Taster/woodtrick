@@ -1,7 +1,7 @@
 import { useEffect } from 'react'
 import { CURRENCIES } from '../../data/catalog'
 import { formatPrice, resolveLines, subtotalUsd, useCart } from '../../store/cart'
-import { ArtworkImage } from '../ui/ArtworkImage'
+import { ProductPhoto } from '../ui/ProductPhoto'
 
 export function CartDrawer() {
   const open = useCart((s) => s.open)
@@ -71,15 +71,14 @@ export function CartDrawer() {
           ) : (
             <ul className="divide-y divide-ink-line">
               {resolved.map((line) => (
-                <li key={`${line.productId}-${line.size}`} className="flex gap-4 py-5">
+                <li key={`${line.productId}-${line.variant}`} className="flex gap-4 py-5">
                   <div className="h-20 w-20 shrink-0 overflow-hidden rounded-sm bg-ink">
                     {line.thumbnail ? (
                       <img src={line.thumbnail} alt="" className="h-full w-full object-cover" />
                     ) : (
-                      <ArtworkImage
-                        artwork={line.product.artwork}
-                        resolution={200}
-                        className="h-full w-full object-cover"
+                      <ProductPhoto
+                        src={line.product.photo}
+                        className="h-full w-full object-contain p-1.5"
                       />
                     )}
                   </div>
@@ -98,7 +97,7 @@ export function CartDrawer() {
                         <button
                           type="button"
                           aria-label="Decrease quantity"
-                          onClick={() => setQty(line.productId, line.size, line.qty - 1)}
+                          onClick={() => setQty(line.productId, line.variant, line.qty - 1)}
                           className="px-3 py-1 text-paper/60 transition-colors hover:text-paper"
                         >
                           −
@@ -107,7 +106,7 @@ export function CartDrawer() {
                         <button
                           type="button"
                           aria-label="Increase quantity"
-                          onClick={() => setQty(line.productId, line.size, line.qty + 1)}
+                          onClick={() => setQty(line.productId, line.variant, line.qty + 1)}
                           className="px-3 py-1 text-paper/60 transition-colors hover:text-paper"
                         >
                           +
@@ -115,7 +114,7 @@ export function CartDrawer() {
                       </div>
                       <button
                         type="button"
-                        onClick={() => remove(line.productId, line.size)}
+                        onClick={() => remove(line.productId, line.variant)}
                         className="text-xs text-paper/40 underline-offset-4 transition-colors hover:text-paper/70 hover:underline"
                       >
                         Remove

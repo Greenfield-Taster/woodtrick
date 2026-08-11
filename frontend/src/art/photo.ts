@@ -27,16 +27,32 @@ export function photoCanvas(image: HTMLImageElement, w: number, h: number): HTML
   return canvas
 }
 
-export function photoBackCanvas(image: HTMLImageElement, w: number, h: number): HTMLCanvasElement {
+/*
+ * Unfinished board. The puzzles are printed on one side only, so the reverse is
+ * the bare panel — no picture, no grain figure, just the colour of the stock.
+ */
+export const BOARD_GREY = '#9a948c'
+
+/*
+ * The picture's own outline filled flat. Three's `alphaMap` reads the green
+ * channel rather than the alpha one, so a cut-out cannot mask a material
+ * directly — this bakes the shape into a texture that can.
+ */
+export function silhouetteCanvas(image: HTMLImageElement, colour: string): HTMLCanvasElement {
+  const { canvas, ctx } = surface(image.naturalWidth, image.naturalHeight)
+  if (!ctx) return canvas
+  ctx.drawImage(image, 0, 0)
+  ctx.globalCompositeOperation = 'source-in'
+  ctx.fillStyle = colour
+  ctx.fillRect(0, 0, canvas.width, canvas.height)
+  return canvas
+}
+
+export function boardBackCanvas(w: number, h: number): HTMLCanvasElement {
   const { canvas, ctx } = surface(w, h)
   if (!ctx) return canvas
-
-  drawPlywood(ctx, w, h, PLY_TONES[2])
-  ctx.globalCompositeOperation = 'luminosity'
-  ctx.globalAlpha = 0.88
-  drawCover(ctx, image, w, h)
-  ctx.globalCompositeOperation = 'source-over'
-  ctx.globalAlpha = 1
+  ctx.fillStyle = BOARD_GREY
+  ctx.fillRect(0, 0, w, h)
   return canvas
 }
 

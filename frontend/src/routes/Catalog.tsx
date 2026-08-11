@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
-import { COLLECTIONS, PRODUCTS, priceFrom, type CollectionId, type SizeKey } from '../data/catalog'
+import { COLLECTIONS, PRODUCTS, maxPieces, priceFrom, type CollectionId } from '../data/catalog'
 import { ProductCard } from '../components/ui/ProductCard'
 import { formatPrice, useCart } from '../store/cart'
 
@@ -13,66 +13,87 @@ const SORTS: Array<{ key: SortKey; label: string }> = [
   { key: 'pieces-desc', label: 'Most pieces' },
 ]
 
-const SIZE_FILTERS: Array<{ key: SizeKey; label: string }> = [
-  { key: 's', label: 'Under an hour or two' },
-  { key: 'm', label: 'An evening' },
-  { key: 'l', label: 'A weekend' },
-  { key: 'king', label: 'A project' },
+/*
+ * Every design is cut to its own piece counts, so the filter bands the counts
+ * rather than naming tiers — a King Size is 300 pieces on one design and 366 on
+ * another, and only the number is comparable across the catalogue.
+ */
+type Band = { key: string; label: string; min: number; max: number }
+
+const BANDS: Band[] = [
+  { key: 'small', label: 'Under 150 pieces', min: 0, max: 149 },
+  { key: 'medium', label: '150 – 350', min: 150, max: 350 },
+  { key: 'large', label: '350 – 700', min: 351, max: 700 },
+  { key: 'huge', label: '700 and up', min: 701, max: Infinity },
+]
+
+export const PRICE_CEILING = 150
+
+/*
+ * Bestsellers is a flag on a product rather than a place a product lives, but
+ * it browses like a collection, so the sidebar lists it as one more way in and
+ * the URL carries it in the same parameter.
+ */
+const BESTSELLERS = 'bestsellers'
+
+type View = CollectionId | typeof BESTSELLERS
+
+const VIEWS: Array<{ id: View; name: string; note: string }> = [
+  { id: BESTSELLERS, name: 'Bestsellers', note: 'The ones people come back for' },
+  ...COLLECTIONS.map(({ id, name, note }) => ({ id: id as View, name, note })),
 ]
 
 export function Catalog() {
   const [params, setParams] = useSearchParams()
   const [sort, setSort] = useState<SortKey>('featured')
-  const [maxUsd, setMaxUsd] = useState(140)
-  const [sizes, setSizes] = useState<SizeKey[]>([])
+  const [maxUsd, setMaxUsd] = useState(PRICE_CEILING)
+  const [bands, setBands] = useState<string[]>([])
   const [filtersOpen, setFiltersOpen] = useState(false)
 
   const currency = useCart((s) => s.currency)
-  const collection = params.get('collection') as CollectionId | null
+  const requested = params.get('collection')
+  const view = VIEWS.some((v) => v.id === requested) ? (requested as View) : null
 
-  const setCollection = (id: CollectionId | null) => {
+  const setView = (id: View | null) => {
     const next = new URLSearchParams(params)
     if (id) next.set('collection', id)
     else next.delete('collection')
     setParams(next, { replace: true })
   }
 
-  const toggleSize = (key: SizeKey) =>
-    setSizes((current) =>
+  const toggleBand = (key: string) =>
+    setBands((current) =>
       current.includes(key) ? current.filter((k) => k !== key) : [...current, key],
     )
 
   const results = useMemo(() => {
+    const chosen = BANDS.filter((b) => bands.includes(b.key))
+
     let list = PRODUCTS.filter((product) => {
-      if (collection && product.collection !== collection) return false
+      if (view === BESTSELLERS && !product.bestseller) return false
+      if (view && view !== BESTSELLERS && product.collection !== view) return false
       if (priceFrom(product) > maxUsd) return false
-      if (sizes.length > 0) {
-        const affordable = product.sizes.some(
-          (s) => sizes.includes(s.key) && s.priceUsd <= maxUsd,
+      if (chosen.length > 0) {
+        const fits = product.variants.some(
+          (v) =>
+            v.pieces !== undefined &&
+            v.priceUsd <= maxUsd &&
+            chosen.some((b) => v.pieces! >= b.min && v.pieces! <= b.max),
         )
-        if (!affordable) return false
+        if (!fits) return false
       }
       return true
     })
 
-    const cheapest = (id: string) => {
-      const product = PRODUCTS.find((p) => p.id === id)!
-      return priceFrom(product)
-    }
-
-    if (sort === 'price-asc') list = [...list].sort((a, b) => cheapest(a.id) - cheapest(b.id))
-    if (sort === 'price-desc') list = [...list].sort((a, b) => cheapest(b.id) - cheapest(a.id))
-    if (sort === 'pieces-desc')
-      list = [...list].sort(
-        (a, b) =>
-          Math.max(...b.sizes.map((s) => s.pieces)) - Math.max(...a.sizes.map((s) => s.pieces)),
-      )
+    if (sort === 'price-asc') list = [...list].sort((a, b) => priceFrom(a) - priceFrom(b))
+    if (sort === 'price-desc') list = [...list].sort((a, b) => priceFrom(b) - priceFrom(a))
+    if (sort === 'pieces-desc') list = [...list].sort((a, b) => maxPieces(b) - maxPieces(a))
 
     return list
-  }, [collection, maxUsd, sizes, sort])
+  }, [view, maxUsd, bands, sort])
 
-  const active = COLLECTIONS.find((c) => c.id === collection)
-  const narrowed = (collection ? 1 : 0) + sizes.length + (maxUsd < 140 ? 1 : 0)
+  const active = VIEWS.find((v) => v.id === view)
+  const narrowed = (view ? 1 : 0) + bands.length + (maxUsd < PRICE_CEILING ? 1 : 0)
 
   return (
     <div className="container-page pt-28 pb-24 md:pt-36">
@@ -83,7 +104,7 @@ export function Catalog() {
           <p className="mt-5 max-w-lg text-[15px] leading-relaxed text-paper/55">
             {active
               ? active.note
-              : 'Each design is cut in four sizes. The picture is recut for every tier, so nothing is a crop of anything else.'}
+              : 'Animals come in four sizes, mandalas in three, a Quezzle in parts of a set. Each tier is recut rather than cropped, so nothing is a slice of anything else.'}
           </p>
         </div>
 
@@ -134,23 +155,23 @@ export function Catalog() {
               <li>
                 <button
                   type="button"
-                  onClick={() => setCollection(null)}
+                  onClick={() => setView(null)}
                   className={[
                     'text-sm transition-colors',
-                    collection === null ? 'text-paper' : 'text-paper/45 hover:text-paper/80',
+                    view === null ? 'text-paper' : 'text-paper/45 hover:text-paper/80',
                   ].join(' ')}
                 >
-                  All
+                  All puzzles
                 </button>
               </li>
-              {COLLECTIONS.map((item) => (
+              {VIEWS.map((item) => (
                 <li key={item.id}>
                   <button
                     type="button"
-                    onClick={() => setCollection(item.id)}
+                    onClick={() => setView(item.id)}
                     className={[
                       'text-sm transition-colors',
-                      collection === item.id ? 'text-paper' : 'text-paper/45 hover:text-paper/80',
+                      view === item.id ? 'text-paper' : 'text-paper/45 hover:text-paper/80',
                     ].join(' ')}
                   >
                     {item.name}
@@ -159,15 +180,15 @@ export function Catalog() {
               ))}
             </ul>
 
-            <h2 className="eyebrow mt-10">How long you want it to take</h2>
+            <h2 className="eyebrow mt-10">How many pieces</h2>
             <ul className="mt-4 space-y-1.5">
-              {SIZE_FILTERS.map((item) => (
+              {BANDS.map((item) => (
                 <li key={item.key}>
                   <label className="flex cursor-pointer items-center gap-2.5 text-sm text-paper/55 transition-colors hover:text-paper">
                     <input
                       type="checkbox"
-                      checked={sizes.includes(item.key)}
-                      onChange={() => toggleSize(item.key)}
+                      checked={bands.includes(item.key)}
+                      onChange={() => toggleBand(item.key)}
                       className="h-3.5 w-3.5 accent-[#D8602C]"
                     />
                     {item.label}
@@ -180,7 +201,7 @@ export function Catalog() {
             <input
               type="range"
               min={24}
-              max={140}
+              max={PRICE_CEILING}
               step={1}
               value={maxUsd}
               onChange={(event) => setMaxUsd(Number(event.target.value))}

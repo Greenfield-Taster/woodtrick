@@ -2,7 +2,7 @@ import { Link } from 'react-router-dom'
 import type { Product } from '../../data/catalog'
 import { priceFrom } from '../../data/catalog'
 import { formatPrice, useCart } from '../../store/cart'
-import { ArtworkImage } from './ArtworkImage'
+import { ProductPhoto } from './ProductPhoto'
 
 interface ProductCardProps {
   product: Product
@@ -11,6 +11,9 @@ interface ProductCardProps {
 
 export function ProductCard({ product, tall = false }: ProductCardProps) {
   const currency = useCart((s) => s.currency)
+
+  const cheapest = product.variants.reduce((low, v) => (v.priceUsd < low.priceUsd ? v : low))
+  const onSale = cheapest.wasUsd !== undefined && cheapest.wasUsd > cheapest.priceUsd
 
   return (
     <Link
@@ -24,19 +27,18 @@ export function ProductCard({ product, tall = false }: ProductCardProps) {
           tall ? 'aspect-[3/4]' : 'aspect-[4/5]',
         ].join(' ')}
       >
-        <div className="h-full w-full transition-transform duration-[900ms] ease-[cubic-bezier(0.16,1,0.3,1)] will-change-transform group-hover:scale-[1.06]">
-          <ArtworkImage
-            artwork={product.artwork}
-            ratio={tall ? 3 / 4 : 4 / 5}
-            className="h-full w-full object-cover"
+        {/* contain, not cover — the photographs are cut-outs and cropping lops off a wing or an ear */}
+        <div className="h-full w-full p-6 transition-transform duration-[900ms] ease-[cubic-bezier(0.16,1,0.3,1)] will-change-transform group-hover:scale-[1.06]">
+          <ProductPhoto
+            src={product.photo}
+            className="h-full w-full object-contain"
+            sizes="(min-width: 1280px) 24rem, (min-width: 640px) 40vw, 90vw"
           />
         </div>
 
-        <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-ink/70 via-transparent to-transparent opacity-70 transition-opacity duration-500 group-hover:opacity-40" />
-
-        {product.isNew && (
-          <span className="absolute left-4 top-4 rounded-full bg-paper/90 px-2.5 py-1 text-[10px] font-medium uppercase tracking-[0.18em] text-ink">
-            New
+        {onSale && (
+          <span className="absolute left-4 top-4 rounded-full bg-ember px-2.5 py-1 text-[10px] font-medium uppercase tracking-[0.18em] text-ink">
+            Sale
           </span>
         )}
 
@@ -48,6 +50,11 @@ export function ProductCard({ product, tall = false }: ProductCardProps) {
       <div className="mt-4 flex items-baseline justify-between gap-4">
         <h3 className="font-display text-xl leading-none">{product.name}</h3>
         <span className="shrink-0 text-sm text-ember">
+          {onSale && (
+            <span className="mr-1.5 text-paper/35 line-through">
+              {formatPrice(cheapest.wasUsd!, currency)}
+            </span>
+          )}
           from {formatPrice(priceFrom(product), currency)}
         </span>
       </div>

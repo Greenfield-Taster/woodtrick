@@ -1,9 +1,19 @@
 import { useState } from 'react'
-import { PRODUCTS } from '../../data/catalog'
 import { formatPrice, useCart } from '../../store/cart'
 import { useReveal } from '../../lib/useReveal'
 
-const TIERS = PRODUCTS[0].sizes
+/*
+ * The house ladder this section has always shown. It used to be read off the
+ * first product; the catalogue now carries each design's own dimensions in
+ * inches, which is the wrong shape for a to-scale comparison in centimetres, so
+ * the four tiers live here.
+ */
+const TIERS = [
+  { key: 's', label: 'Size S', pieces: 100, cm: [20, 15], hours: [1, 2], priceUsd: 27.99 },
+  { key: 'm', label: 'Size M', pieces: 200, cm: [30, 22], hours: [2, 3], priceUsd: 42.99 },
+  { key: 'l', label: 'Size L', pieces: 350, cm: [43, 31], hours: [4, 5], priceUsd: 65.99 },
+  { key: 'king', label: 'King Size', pieces: 700, cm: [60, 43], hours: [6, 8], priceUsd: 94.99 },
+]
 
 const NOTES: Record<string, string> = {
   s: 'An evening. Fits on a lap tray.',

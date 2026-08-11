@@ -78,3 +78,4 @@ export function previewGrid(pieces: number): { rows: number; cols: number } {
   if (pieces <= 350) return { rows: 6, cols: 9 }
   return { rows: 8, cols: 11 }
 }
+

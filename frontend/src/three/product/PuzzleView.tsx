@@ -4,12 +4,13 @@ import * as THREE from 'three'
 import { artworkPieceMaterials } from '../piece/woodMaterial'
 import { useInViewport } from '../../lib/useInViewport'
 import { useOrbitDrag } from '../../lib/useOrbitDrag'
-import { assemblePuzzle, previewGrid } from './assemble'
+import { assemblePuzzle } from './assemble'
 
 interface PuzzleViewProps {
   front: HTMLCanvasElement
   back: HTMLCanvasElement
-  pieces: number
+  rows: number
+  cols: number
   flipped: boolean
 }
 
@@ -17,10 +18,8 @@ interface PanelProps extends PuzzleViewProps {
   orbit: React.RefObject<{ yaw: number; pitch: number }>
 }
 
-function Panel({ front, back, pieces, flipped, orbit }: PanelProps) {
+function Panel({ front, back, rows, cols, flipped, orbit }: PanelProps) {
   const group = useRef<THREE.Group>(null)
-
-  const { rows, cols } = previewGrid(pieces)
 
   const puzzle = useMemo(() => assemblePuzzle(rows, cols, 1301), [rows, cols])
   const kit = useMemo(() => artworkPieceMaterials(front, back), [front, back])
@@ -42,7 +41,9 @@ function Panel({ front, back, pieces, flipped, orbit }: PanelProps) {
   })
 
   return (
-    <group ref={group} scale={3.4}>
+    // the mesh is 1 wide by rows/cols tall, so a portrait picture has to come
+    // down to stay inside the same frame a landscape one fills
+    <group ref={group} scale={3.4 / Math.max(1, rows / cols)}>
       {puzzle.slots.map((geometry, slot) => (
         <mesh key={slot} geometry={geometry} material={kit.materials[slot]} castShadow />
       ))}
