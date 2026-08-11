@@ -197,6 +197,17 @@
   }
 }
 
+/*
+ * The hero is the only grained surface on the page, so where it ends its noise
+ * stops dead and draws a seam. Fading the grain out over the last stretch hides
+ * that join now that no border line runs under the wordmark.
+ */
+@utility grain-fade {
+  &::after {
+    mask-image: linear-gradient(to bottom, #000 55%, transparent 100%);
+  }
+}
+
 /* Small caps label used above section headings. */
 @utility eyebrow {
   font-family: var(--font-sans);
@@ -241,10 +252,31 @@
   }
 }
 
+/*
+ * Same entrance, but driven from a parent so a group of items can come in one
+ * after another. Each child carries its own transition-delay in the markup.
+ */
+@utility reveal-stagger {
+  & .reveal-item {
+    opacity: 0;
+    transform: translateY(1.75rem);
+    transition:
+      opacity 0.9s var(--ease-out-soft),
+      transform 0.9s var(--ease-out-soft);
+  }
+
+  &[data-revealed='true'] .reveal-item {
+    opacity: 1;
+    transform: none;
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
-  .reveal {
+  .reveal,
+  .reveal-stagger .reveal-item {
     opacity: 1;
     transform: none;
     transition: none;
+    transition-delay: 0s !important;
   }
 }

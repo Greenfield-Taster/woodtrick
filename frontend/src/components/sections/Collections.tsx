@@ -1,30 +1,47 @@
+import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { COLLECTIONS, PRODUCTS, priceFrom, productsIn } from '../../data/catalog'
 import { formatPrice, useCart } from '../../store/cart'
 import { ArtworkImage } from '../ui/ArtworkImage'
 import { useReveal } from '../../lib/useReveal'
 
+/*
+ * The hero pieces need ~2.1s to fly together, and the catalogue now sits above
+ * the fold beside them. On a fresh landing it holds until the wordmark is
+ * nearly whole, then cascades in; arriving from a scroll it starts at once.
+ */
+const HERO_LEAD = 1.6
+const TILE_STEP = 0.08
+
 export function Collections() {
   const currency = useCart((s) => s.currency)
   const ref = useReveal<HTMLDivElement>()
+  const [wait] = useState(() =>
+    typeof window !== 'undefined' && window.scrollY < 200 ? HERO_LEAD : 0,
+  )
 
   return (
-    <section className="border-t border-ink-line py-24 md:py-32">
-      <div className="container-page">
+    <section className="pt-14 pb-24 md:pt-16 md:pb-32">
+      <div ref={ref} className="container-page reveal-stagger">
         <div className="flex items-end justify-between gap-8">
-          <div>
+          <div className="reveal-item" style={{ transitionDelay: `${wait}s` }}>
             <p className="eyebrow">Six ways in</p>
             <h2 className="mt-5 text-4xl md:text-5xl">Collections</h2>
           </div>
-          <Link
-            to="/shop"
-            className="hidden shrink-0 text-sm text-paper/60 underline-offset-8 transition-colors hover:text-paper hover:underline sm:block"
+          <div
+            className="reveal-item hidden shrink-0 sm:block"
+            style={{ transitionDelay: `${wait + TILE_STEP}s` }}
           >
-            All {PRODUCTS.length} puzzles
-          </Link>
+            <Link
+              to="/shop"
+              className="text-sm text-paper/60 underline-offset-8 transition-colors hover:text-paper hover:underline"
+            >
+              All {PRODUCTS.length} puzzles
+            </Link>
+          </div>
         </div>
 
-        <div ref={ref} className="reveal mt-14 grid gap-x-6 gap-y-12 sm:grid-cols-2 lg:grid-cols-3">
+        <div className="mt-14 grid gap-x-6 gap-y-12 sm:grid-cols-2 lg:grid-cols-3">
           {COLLECTIONS.map((collection, index) => {
             const items = productsIn(collection.id)
             const lead = items[0]
@@ -34,7 +51,8 @@ export function Collections() {
               <Link
                 key={collection.id}
                 to={`/shop?collection=${collection.id}`}
-                className="group block"
+                className="reveal-item group block"
+                style={{ transitionDelay: `${wait + (index + 2) * TILE_STEP}s` }}
               >
                 <div
                   className={[

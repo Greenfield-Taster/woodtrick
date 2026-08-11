@@ -10,6 +10,9 @@ import { PieceField } from './PieceField'
 const WIDE_LINES = ['UNIDRAGON']
 const NARROW_LINES = ['UNI', 'DRAGON']
 const WORD_WIDTH = 12
+const BASE_FOV = 38
+const MIN_Z = 8
+const BAND_PADDING = 1.08
 
 const STAGE = {
   dark: {
@@ -30,40 +33,43 @@ const STAGE = {
   },
 } as const
 
-export interface HeroReserve {
-  top: number
-  bottom: number
-}
-
 interface FitCameraProps {
   width: number
   height: number
-  reserve: HeroReserve
+  centre: number
+  /* Share of the hero the header sits over, kept clear of the wordmark. */
+  headroom: number
 }
 
-function FitCamera({ width, height, reserve }: FitCameraProps) {
+function FitCamera({ width, height, centre, headroom }: FitCameraProps) {
   const { camera, size } = useThree()
 
   useEffect(() => {
     const perspective = camera as THREE.PerspectiveCamera
     const aspect = size.width / size.height
-    const vFov = THREE.MathUtils.degToRad(perspective.fov)
-    const half = 2 * Math.tan(vFov / 2)
+    const baseHalf = 2 * Math.tan(THREE.MathUtils.degToRad(BASE_FOV) / 2)
 
-    const margin = size.width < 640 ? 1.36 : 1.14
+    const margin = size.width < 640 ? 1.18 : 1.12
 
-    const band = Math.max(0.08, 1 - reserve.top - reserve.bottom)
+    const band = Math.max(0.08, 1 - headroom)
 
-    const byWidth = (width * margin) / (half * aspect)
-    const byHeight = (height * 1.3) / (half * band)
-    const z = THREE.MathUtils.clamp(Math.max(byWidth, byHeight), 8, 70)
+    const byWidth = (width * margin) / (baseHalf * aspect)
+    const byHeight = (height * BAND_PADDING) / (baseHalf * band)
+    const fit = Math.min(70, Math.max(byWidth, byHeight))
 
-    const aim = (reserve.top + band / 2 - 0.5) * half * z
+    // the intro pieces fly in from z ≈ 6–17, so the camera stops at MIN_Z and
+    // narrows the lens instead of moving closer for a short hero
+    const z = Math.max(MIN_Z, fit)
+    const half = (baseHalf * fit) / z
+    perspective.fov = THREE.MathUtils.radToDeg(2 * Math.atan(half / 2))
+
+    // centre of the band — equal air above and below the wordmark
+    const aim = centre + (headroom + band / 2 - 0.5) * half * z
 
     perspective.position.set(0, aim, z)
     perspective.lookAt(0, aim, 0)
     perspective.updateProjectionMatrix()
-  }, [camera, size, width, height, reserve])
+  }, [camera, size, width, height, centre, headroom])
 
   return null
 }
@@ -104,16 +110,18 @@ function SweepLight({
 
 function Stage({
   pointer,
-  reserve,
+  headroom,
 }: {
   pointer: React.RefObject<THREE.Vector2>
-  reserve: HeroReserve
+  headroom: number
 }) {
   const quality = useQuality()
   const theme = useTheme((s) => s.theme)
   const stage = STAGE[theme]
   const { size } = useThree()
-  const narrow = size.width / size.height < 0.85
+  // phones break the wordmark over two lines — keyed off width, not the canvas
+  // aspect, so a shorter hero cannot flip it back to one cramped line
+  const narrow = size.width < 640
   const sample = useWordmarkPoints(
     narrow ? NARROW_LINES : WIDE_LINES,
     quality.heroPieces,
@@ -125,7 +133,8 @@ function Stage({
       <FitCamera
         width={sample?.width ?? WORD_WIDTH}
         height={sample?.height ?? 2}
-        reserve={reserve}
+        centre={sample?.centre ?? 0}
+        headroom={headroom}
       />
 
       <color attach="background" args={[stage.background]} />
@@ -155,7 +164,7 @@ function Stage({
   )
 }
 
-export function HeroScene({ reserve }: { reserve: HeroReserve }) {
+export function HeroScene({ headroom }: { headroom: number }) {
   const quality = useQuality()
   const pointer = useRef(new THREE.Vector2(0, 0))
   const { ref: host, visible } = useInViewport<HTMLDivElement>()
@@ -186,7 +195,7 @@ export function HeroScene({ reserve }: { reserve: HeroReserve }) {
           }
         }}
       >
-        <Stage pointer={pointer} reserve={reserve} />
+        <Stage pointer={pointer} headroom={headroom} />
       </Canvas>
     </div>
   )

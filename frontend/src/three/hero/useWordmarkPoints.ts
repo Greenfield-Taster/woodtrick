@@ -6,6 +6,7 @@ export interface WordmarkSample {
   spacing: number
   width: number
   height: number
+  centre: number
 }
 
 const PIECES_PER_STEM = 3
@@ -22,7 +23,7 @@ export function sampleWordmark(
   canvas.width = W
   canvas.height = H
   const ctx = canvas.getContext('2d', { willReadFrequently: true })
-  if (!ctx) return { points: [], cells: [], spacing: 1, width: worldWidth, height: 0 }
+  if (!ctx) return { points: [], cells: [], spacing: 1, width: worldWidth, height: 0, centre: 0 }
 
   ctx.fillStyle = '#fff'
   ctx.textAlign = 'center'
@@ -106,6 +107,9 @@ export function sampleWordmark(
     spacing: step * scale,
     width: points.length ? Math.max(...xs) - Math.min(...xs) + step * scale : worldWidth,
     height: points.length ? Math.max(...ys) - Math.min(...ys) + step * scale : 0,
+    // the ink sits above the text's middle baseline, so the camera has to aim
+    // at the real centre of the letters to leave equal air above and below
+    centre: points.length ? (Math.max(...ys) + Math.min(...ys)) / 2 : 0,
   }
 }
 
