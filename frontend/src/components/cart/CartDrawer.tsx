@@ -1,6 +1,6 @@
 import { useEffect } from 'react'
 import { CURRENCIES } from '../../data/catalog'
-import { formatPrice, resolveLines, subtotalUsd, useCart } from '../../store/cart'
+import { discountUsd, formatPrice, resolveLines, subtotalUsd, useCart } from '../../store/cart'
 import { ProductPhoto } from '../ui/ProductPhoto'
 
 export function CartDrawer() {
@@ -10,6 +10,8 @@ export function CartDrawer() {
   const setQty = useCart((s) => s.setQty)
   const remove = useCart((s) => s.remove)
   const currency = useCart((s) => s.currency)
+  const coupon = useCart((s) => s.coupon)
+  const applyCoupon = useCart((s) => s.applyCoupon)
 
   useEffect(() => {
     if (!open) return
@@ -26,6 +28,7 @@ export function CartDrawer() {
 
   const resolved = resolveLines(lines)
   const subtotal = subtotalUsd(lines)
+  const discount = discountUsd(lines, coupon)
   const threshold = CURRENCIES[currency].freeShippingFrom / CURRENCIES[currency].rate
   const toFree = Math.max(0, threshold - subtotal)
   const progress = Math.min(1, subtotal / threshold)
@@ -142,10 +145,44 @@ export function CartDrawer() {
             </p>
           </div>
 
+          {coupon && (
+            <div className="mb-3 flex items-center justify-between gap-3 rounded-sm border border-ember/40 bg-ember/10 px-3 py-2.5">
+              <div className="min-w-0">
+                <p className="truncate text-xs tracking-wide text-ember">{coupon.code}</p>
+                <p className="mt-0.5 text-[11px] text-paper/45">
+                  {coupon.percent}% off, won at the puzzle table
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={() => applyCoupon(null)}
+                className="shrink-0 text-[11px] text-paper/40 underline-offset-4 transition-colors hover:text-paper/70 hover:underline"
+              >
+                Remove
+              </button>
+            </div>
+          )}
+
           <div className="flex items-baseline justify-between">
             <span className="text-sm text-paper/60">Subtotal</span>
-            <span className="font-display text-2xl">{formatPrice(subtotal, currency)}</span>
+            <span
+              className={[
+                'font-display text-2xl',
+                discount > 0 ? 'text-paper/40 line-through decoration-1' : '',
+              ].join(' ')}
+            >
+              {formatPrice(subtotal, currency)}
+            </span>
           </div>
+
+          {discount > 0 && (
+            <div className="mt-1 flex items-baseline justify-between">
+              <span className="text-sm text-paper/60">With your discount</span>
+              <span className="font-display text-2xl text-ember">
+                {formatPrice(subtotal - discount, currency)}
+              </span>
+            </div>
+          )}
 
           <button
             type="button"

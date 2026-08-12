@@ -16,21 +16,30 @@ export interface CartLine {
   thumbnail?: string
 }
 
+/* Won at the puzzle table rather than typed in, for now. */
+export interface Coupon {
+  code: string
+  percent: number
+}
+
 interface CartState {
   lines: CartLine[]
   open: boolean
   currency: CurrencyCode
+  coupon: Coupon | null
   add(productId: string, variant: VariantKey, qty?: number, thumbnail?: string): void
   remove(productId: string, variant: VariantKey): void
   setQty(productId: string, variant: VariantKey, qty: number): void
   setOpen(open: boolean): void
   setCurrency(currency: CurrencyCode): void
+  applyCoupon(coupon: Coupon | null): void
 }
 
 export const useCart = create<CartState>((set) => ({
   lines: [],
   open: false,
   currency: 'USD',
+  coupon: null,
 
   add: (productId, variant, qty = 1, thumbnail) =>
     set((state) => {
@@ -55,6 +64,7 @@ export const useCart = create<CartState>((set) => ({
 
   setOpen: (open) => set({ open }),
   setCurrency: (currency) => set({ currency }),
+  applyCoupon: (coupon) => set({ coupon }),
 }))
 
 export interface ResolvedLine extends CartLine {
@@ -76,6 +86,11 @@ export function resolveLines(lines: CartLine[]): ResolvedLine[] {
 
 export function subtotalUsd(lines: CartLine[]): number {
   return resolveLines(lines).reduce((sum, l) => sum + l.unitUsd * l.qty, 0)
+}
+
+export function discountUsd(lines: CartLine[], coupon: Coupon | null): number {
+  if (!coupon) return 0
+  return (subtotalUsd(lines) * coupon.percent) / 100
 }
 
 export function formatPrice(usd: number, currency: CurrencyCode): string {
