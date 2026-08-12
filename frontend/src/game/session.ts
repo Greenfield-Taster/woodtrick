@@ -160,16 +160,29 @@ export async function createSession(options: SessionOptions): Promise<Session> {
     /* Board position of the pointer at the last move. */
     x: number
     y: number
+    /* The same point on the page. Pinching has to be measured here: board
+     * distances shrink as the camera zooms in, so a pinch judged in board units
+     * fights its own result. */
+    cx: number
+    cy: number
     /* The piece grabbed, or null while panning the table. */
     piece: number | null
-    moved: boolean
   }
 
   const active = new Map<number, Held>()
-  let pinchStart: { distance: number; scale: number } | null = null
+  let pinch: { distance: number; scale: number; midX: number; midY: number } | null = null
 
   function boardPoint(event: PointerEvent) {
     return scene.toBoard(event.clientX, event.clientY)
+  }
+
+  function spanOfTouches() {
+    const [a, b] = [...active.values()]
+    return {
+      distance: Math.hypot(a.cx - b.cx, a.cy - b.cy),
+      midX: (a.cx + b.cx) / 2,
+      midY: (a.cy + b.cy) / 2,
+    }
   }
 
   function onPointerDown(event: PointerEvent) {
@@ -200,13 +213,15 @@ export async function createSession(options: SessionOptions): Promise<Session> {
       pointerId: event.pointerId,
       x: point.x,
       y: point.y,
+      cx: event.clientX,
+      cy: event.clientY,
       piece: hit,
-      moved: false,
     })
 
-    if (active.size === 2) {
-      const [a, b] = [...active.values()]
-      pinchStart = { distance: Math.hypot(a.x - b.x, a.y - b.y), scale: scene.camera.scale }
+    // two fingers move the table, but only when neither of them is already
+    // holding a piece — otherwise a two-handed drag would zoom as a side effect
+    if (active.size === 2 && [...active.values()].every((held) => held.piece === null)) {
+      pinch = { ...spanOfTouches(), scale: scene.camera.scale }
     }
   }
 
@@ -217,9 +232,38 @@ export async function createSession(options: SessionOptions): Promise<Session> {
     const held = active.get(event.pointerId)
     if (!held) return
 
+    held.cx = event.clientX
+    held.cy = event.clientY
+
+    if (pinch && active.size === 2) {
+      framedByPlayer = true
+      const span = spanOfTouches()
+
+      // the midpoint carries the table along with it, and the spread sets the
+      // zoom about that same midpoint, so both fingers keep the board they
+      // started on
+      scene.panBy(span.midX - pinch.midX, span.midY - pinch.midY)
+      pinch.midX = span.midX
+      pinch.midY = span.midY
+
+      if (span.distance > 8 && pinch.distance > 8) {
+        const before = scene.toBoard(span.midX, span.midY)
+        scene.camera.scale = Math.max(
+          5,
+          Math.min(320, pinch.scale * (span.distance / pinch.distance)),
+        )
+        const after = scene.toBoard(span.midX, span.midY)
+        scene.camera.x += before.x - after.x
+        scene.camera.y += before.y - after.y
+      }
+
+      held.x = point.x
+      held.y = point.y
+      return
+    }
+
     const dx = point.x - held.x
     const dy = point.y - held.y
-    if (Math.abs(dx) > 0.01 || Math.abs(dy) > 0.01) held.moved = true
 
     if (held.piece !== null) {
       const group = state.pieces[held.piece].group
@@ -234,22 +278,12 @@ export async function createSession(options: SessionOptions): Promise<Session> {
 
     held.x = point.x
     held.y = point.y
-
-    if (active.size === 2 && pinchStart) {
-      const [a, b] = [...active.values()]
-      const distance = Math.hypot(a.x - b.x, a.y - b.y)
-      if (distance > 0.01 && pinchStart.distance > 0.01) {
-        framedByPlayer = true
-        const target = pinchStart.scale * (pinchStart.distance / distance)
-        scene.camera.scale = Math.max(5, Math.min(320, target))
-      }
-    }
   }
 
   function onPointerUp(event: PointerEvent) {
     const held = active.get(event.pointerId)
     active.delete(event.pointerId)
-    if (active.size < 2) pinchStart = null
+    if (active.size < 2) pinch = null
     if (!held) return
 
     try {
