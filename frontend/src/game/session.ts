@@ -47,6 +47,8 @@ export interface SessionEvents {
   onSolved(): void
   onIntroDone(): void
   onAction?(action: Action): void
+  /* Where this player's pointer is on the board, for showing it to the others. */
+  onPointer?(x: number, y: number): void
 }
 
 export interface Session {
@@ -209,10 +211,12 @@ export async function createSession(options: SessionOptions): Promise<Session> {
   }
 
   function onPointerMove(event: PointerEvent) {
+    const point = boardPoint(event)
+    options.onPointer?.(point.x, point.y)
+
     const held = active.get(event.pointerId)
     if (!held) return
 
-    const point = boardPoint(event)
     const dx = point.x - held.x
     const dy = point.y - held.y
     if (Math.abs(dx) > 0.01 || Math.abs(dy) > 0.01) held.moved = true

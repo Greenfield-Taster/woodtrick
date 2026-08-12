@@ -49,6 +49,8 @@ export interface Scene {
   draw(now: number): void
   fit(): void
   toBoard(clientX: number, clientY: number): { x: number; y: number }
+  /* Board position to a point on the page, for anything drawn in DOM over the canvas. */
+  toClient(x: number, y: number): { x: number; y: number }
   pieceAt(clientX: number, clientY: number): number | null
   zoomAt(clientX: number, clientY: number, factor: number): void
   panBy(dxPx: number, dyPx: number): void
@@ -88,6 +90,7 @@ export function createScene(
     draw,
     fit,
     toBoard,
+    toClient,
     pieceAt,
     zoomAt,
     panBy,
@@ -139,6 +142,14 @@ export function createScene(
     return {
       x: camera.x + (clientX - rect.left - width / 2) / camera.scale,
       y: camera.y + (clientY - rect.top - height / 2) / camera.scale,
+    }
+  }
+
+  function toClient(x: number, y: number) {
+    const rect = canvas.getBoundingClientRect()
+    return {
+      x: rect.left + width / 2 + (x - camera.x) * camera.scale,
+      y: rect.top + height / 2 + (y - camera.y) * camera.scale,
     }
   }
 

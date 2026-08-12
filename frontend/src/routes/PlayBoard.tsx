@@ -1,12 +1,17 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { lazy, Suspense, useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { Link, Navigate, useLocation, useNavigate, useParams } from 'react-router-dom'
 import { productBySlug } from '../data/catalog'
-import { Board } from '../components/game/Board'
 import { WinScreen } from '../components/game/WinScreen'
-import { newSeed, puzzlePath, readLink, shareUrl } from '../game/link'
+import { newRoom, newSeed, puzzlePath, readLink, shareUrl } from '../game/link'
 import { formatClock, recordTime } from '../game/reward'
 import { isMuted, setMuted } from '../game/sound'
 import type { Session } from '../game/session'
+
+/* Split for the reason given in Hero — the cutter and the painter are only
+ * wanted by somebody who has actually opened a board. */
+const Board = lazy(() =>
+  import('../components/game/Board').then((m) => ({ default: m.Board })),
+)
 
 export function PlayBoard() {
   const { slug = '' } = useParams()
@@ -25,7 +30,8 @@ export function PlayBoard() {
   const [ghost, setGhost] = useState(false)
   const [edgesOnly, setEdgesOnly] = useState(false)
   const [muted, setMutedState] = useState(isMuted)
-  const [copied, setCopied] = useState(false)
+  const [copied, setCopied] = useState<'link' | 'room' | null>(null)
+  const [peers, setPeers] = useState(0)
 
   /* A link without a seed is still a request for a puzzle — pick one and say so. */
   useEffect(() => {
@@ -66,15 +72,27 @@ export function PlayBoard() {
 
   if (!product || !product.photo) return <Navigate to="/play" replace />
 
-  const share = async () => {
-    const url = shareUrl(slug, link.pieces, link.seed, link.room)
+  const copy = async (url: string, kind: 'link' | 'room') => {
     try {
       await navigator.clipboard.writeText(url)
-      setCopied(true)
-      window.setTimeout(() => setCopied(false), 2200)
+      setCopied(kind)
+      window.setTimeout(() => setCopied(null), 2400)
     } catch {
       window.prompt('Copy the link', url)
     }
+  }
+
+  const share = () => copy(shareUrl(slug, link.pieces, link.seed, link.room), 'link')
+
+  /*
+   * Opening a room changes the URL, which remounts the board into a networked
+   * one. The seed goes along unchanged, so whoever follows the link gets this
+   * cut rather than a fresh one.
+   */
+  const playTogether = async () => {
+    const room = link.room ?? newRoom()
+    await copy(shareUrl(slug, link.pieces, link.seed, room), 'room')
+    if (!link.room) navigate(puzzlePath(slug, link.pieces, link.seed, room), { replace: true })
   }
 
   const again = () => {
@@ -93,17 +111,21 @@ export function PlayBoard() {
 
   return (
     <section className="relative mt-16 h-[calc(100dvh-4rem)] overflow-hidden bg-ink md:mt-20 md:h-[calc(100dvh-5rem)]">
-      <Board
-        key={`${slug}-${link.pieces}-${link.seed}`}
-        slug={slug}
-        imageSrc={product.photo}
-        pieces={link.pieces}
-        seed={link.seed}
-        onSession={onSession}
-        onProgress={onProgress}
-        onSolved={onSolved}
-        onIntroDone={onIntroDone}
-      />
+      <Suspense fallback={null}>
+        <Board
+          key={`${slug}-${link.pieces}-${link.seed}`}
+          slug={slug}
+          imageSrc={product.photo}
+          pieces={link.pieces}
+          seed={link.seed}
+          room={link.room}
+          onSession={onSession}
+          onProgress={onProgress}
+          onSolved={onSolved}
+          onIntroDone={onIntroDone}
+          onPeerCount={setPeers}
+        />
+      </Suspense>
 
       <div className="pointer-events-none absolute inset-0 flex flex-col justify-between p-4 md:p-6">
         <div className="flex items-start justify-between gap-4">
@@ -121,6 +143,17 @@ export function PlayBoard() {
               </div>
               <span className="text-xs tabular-nums text-paper/45">{percent}%</span>
               <span className="text-xs tabular-nums text-paper/45">{formatClock(elapsed)}</span>
+              {link.room && (
+                <span className="flex items-center gap-1.5 text-xs text-paper/45">
+                  <span
+                    className={[
+                      'h-1.5 w-1.5 rounded-full',
+                      peers > 0 ? 'bg-ember' : 'bg-paper/25',
+                    ].join(' ')}
+                  />
+                  {peers > 0 ? `${peers} with you` : 'waiting for a friend'}
+                </span>
+              )}
             </div>
           </div>
 
@@ -176,7 +209,18 @@ export function PlayBoard() {
             {muted ? 'Sound off' : 'Sound on'}
           </button>
           <button type="button" onClick={share} className={[control, off].join(' ')}>
-            {copied ? 'Link copied' : 'Share this cut'}
+            {copied === 'link' ? 'Link copied' : 'Share this cut'}
+          </button>
+          <button
+            type="button"
+            onClick={playTogether}
+            className={[control, link.room ? on : off].join(' ')}
+          >
+            {copied === 'room'
+              ? 'Invite copied — send it over'
+              : link.room
+                ? 'Invite someone else'
+                : 'Play with a friend'}
           </button>
         </div>
       </div>
