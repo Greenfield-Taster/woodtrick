@@ -7,6 +7,8 @@ import { Home } from '../routes/Home'
 import { Catalog } from '../routes/Catalog'
 import { ProductPage } from '../routes/ProductPage'
 import { CustomPuzzle } from '../routes/CustomPuzzle'
+import { Play } from '../routes/Play'
+import { PlayBoard } from '../routes/PlayBoard'
 
 export function App() {
   if (typeof window !== 'undefined' && 'scrollRestoration' in window.history) {
@@ -22,6 +24,8 @@ export function App() {
           <Route path="/" element={<Home />} />
           <Route path="/shop" element={<Catalog />} />
           <Route path="/custom" element={<CustomPuzzle />} />
+          <Route path="/play" element={<Play />} />
+          <Route path="/play/:slug" element={<PlayBoard />} />
           <Route path="/puzzle/:slug" element={<ProductPage />} />
           <Route path="*" element={<Home />} />
         </Routes>

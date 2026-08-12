@@ -9,6 +9,7 @@ import { ThemeToggle } from './ThemeToggle'
 const NAV = [
   { to: '/shop', label: 'Shop' },
   { to: '/custom', label: 'Custom puzzle' },
+  { to: '/play', label: 'Play' },
 ]
 
 export function Header() {
