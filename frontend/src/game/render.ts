@@ -22,6 +22,27 @@ interface Ease {
 
 const EASE_MS = 260
 
+const TABLE = {
+  dark: {
+    fill: '#14100c',
+    glowInner: 'rgba(84,64,44,0.55)',
+    glowOuter: 'rgba(12,9,7,0)',
+    sweepBlend: 'screen' as GlobalCompositeOperation,
+    sweepMid: 'rgba(255,232,200,0.42)',
+  },
+  light: {
+    fill: '#f3ece1',
+    glowInner: 'rgba(255,250,242,0.7)',
+    glowOuter: 'rgba(243,236,225,0)',
+    sweepBlend: 'multiply' as GlobalCompositeOperation,
+    sweepMid: 'rgba(122,78,40,0.14)',
+  },
+} as const
+
+function tableTone() {
+  return TABLE[document.documentElement.dataset.theme === 'light' ? 'light' : 'dark']
+}
+
 function outCubic(t: number) {
   const u = 1 - t
   return 1 - u * u * u
@@ -214,7 +235,8 @@ export function createScene(
   }
 
   function paintTable() {
-    ctx.fillStyle = '#14100d'
+    const tone = tableTone()
+    ctx.fillStyle = tone.fill
     ctx.fillRect(0, 0, width, height)
 
     const glow = ctx.createRadialGradient(
@@ -225,8 +247,8 @@ export function createScene(
       height * 0.42,
       Math.max(width, height) * 0.72,
     )
-    glow.addColorStop(0, 'rgba(84,64,44,0.55)')
-    glow.addColorStop(1, 'rgba(12,9,7,0)')
+    glow.addColorStop(0, tone.glowInner)
+    glow.addColorStop(1, tone.glowOuter)
     ctx.fillStyle = glow
     ctx.fillRect(0, 0, width, height)
   }
@@ -262,11 +284,13 @@ export function createScene(
     const reach = rect.w + rect.h
     const at = -rect.h + band * reach
 
+    const tone = tableTone()
+
     ctx.save()
     ctx.beginPath()
     ctx.rect(rect.x, rect.y, rect.w, rect.h)
     ctx.clip()
-    ctx.globalCompositeOperation = 'screen'
+    ctx.globalCompositeOperation = tone.sweepBlend
 
     const grad = ctx.createLinearGradient(
       rect.x + at - reach * 0.16,
@@ -274,9 +298,9 @@ export function createScene(
       rect.x + at + reach * 0.16,
       rect.y + rect.h,
     )
-    grad.addColorStop(0, 'rgba(255,232,200,0)')
-    grad.addColorStop(0.5, 'rgba(255,232,200,0.42)')
-    grad.addColorStop(1, 'rgba(255,232,200,0)')
+    grad.addColorStop(0, 'rgba(0,0,0,0)')
+    grad.addColorStop(0.5, tone.sweepMid)
+    grad.addColorStop(1, 'rgba(0,0,0,0)')
     ctx.fillStyle = grad
     ctx.fillRect(rect.x, rect.y, rect.w, rect.h)
     ctx.restore()
