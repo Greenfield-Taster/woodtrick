@@ -20,15 +20,15 @@ interface WinScreenProps {
  * sold the 24-piece box.
  */
 function nearestVariant(product: Product, pieces: number) {
-  return product.variants
-    .filter((variant) => !variant.soldOut)
-    .reduce(
-      (best, variant) =>
-        Math.abs((variant.pieces ?? 0) - pieces) < Math.abs((best.pieces ?? 0) - pieces)
-          ? variant
-          : best,
-      product.variants[0],
-    )
+  const stocked = product.variants.filter((variant) => !variant.soldOut)
+  // seeding the search with variants[0] would let a sold-out tier win it
+  return stocked.reduce(
+    (best, variant) =>
+      Math.abs((variant.pieces ?? 0) - pieces) < Math.abs((best.pieces ?? 0) - pieces)
+        ? variant
+        : best,
+    stocked[0] ?? product.variants[0],
+  )
 }
 
 export function WinScreen({

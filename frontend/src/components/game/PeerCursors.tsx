@@ -33,6 +33,9 @@ export function PeerCursors({ session, cursors }: PeerCursorsProps) {
       frame = requestAnimationFrame(tick)
       const live = cursors()
       const present = new Set<string>()
+      // read the box once; asking for it inside the loop makes every peer
+      // after the first force a fresh layout
+      const box = root.getBoundingClientRect()
 
       for (const peer of live) {
         present.add(peer.id)
@@ -47,7 +50,6 @@ export function PeerCursors({ session, cursors }: PeerCursorsProps) {
         }
 
         const at = session.scene.toClient(peer.x, peer.y)
-        const box = root.getBoundingClientRect()
         node.style.transform = `translate(${at.x - box.left}px, ${at.y - box.top}px)`
       }
 

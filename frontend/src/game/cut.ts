@@ -10,7 +10,7 @@
  * were cut to meet.
  */
 
-import { edgesFor, makeTabGrid, piecePoints, TAB_REACH, type Point } from '../lib/pieceOutline'
+import { edgesFor, makeTabGrid, piecePoints, type Point } from '../lib/pieceOutline'
 
 export interface CutPiece {
   id: number
@@ -100,5 +100,3 @@ export function cutPuzzle(rows: number, cols: number, seed: number): CutPiece[] 
 
   return pieces
 }
-
-export { TAB_REACH }

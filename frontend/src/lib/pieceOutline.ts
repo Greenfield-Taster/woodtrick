@@ -88,14 +88,6 @@ type Pt = { t: number; off: number }
 const ARC_START = (205 * Math.PI) / 180
 const ARC_END = (-25 * Math.PI) / 180
 
-/*
- * How far a tab reaches past its own cell, as a fraction of one cell. The
- * profile below builds heads up to `0.145 * 1.2 + 0.1 * 1.14`, so this is the
- * ceiling with a little air above it — the renderer uses it to size each
- * piece's bitmap.
- */
-export const TAB_REACH = 0.32
-
 function edgeProfile(tab: Tab, rand: () => number, detail: number): Pt[] {
   const pts: Pt[] = []
   const steps = (full: number, floor: number) => Math.max(floor, Math.round(full * detail))

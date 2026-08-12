@@ -5,7 +5,7 @@
  */
 
 import type { BakedPiece } from './bake'
-import type { GameState, Snap } from './state'
+import { isEdgePiece, type GameState, type Snap } from './state'
 
 export interface Camera {
   /* Board position at the centre of the canvas, and pixels per cell. */
@@ -351,13 +351,8 @@ export function createScene(
           px = piece.col + (piece.x - piece.col) * k
           py = piece.row + (piece.y - piece.row) * k
           alpha = Math.min(1, intro / 0.12)
-        } else if (scene.edgesOnly) {
-          const edge =
-            piece.row === 0 ||
-            piece.col === 0 ||
-            piece.row === state.rows - 1 ||
-            piece.col === state.cols - 1
-          if (!edge) alpha *= 0.22
+        } else if (scene.edgesOnly && !isEdgePiece(state, piece)) {
+          alpha *= 0.22
         }
 
         drawPiece(id, px, py, alpha, lifted)
