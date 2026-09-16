@@ -3,7 +3,6 @@
 A design concept for a wooden-puzzle store aimed at the US and EU markets, built to show what the storefront could be rather than to take orders. The hero wordmark assembles itself out of laser-cut wooden pieces in 3D, the product page re-cuts a real puzzle when you change its size, a visitor can upload their own picture and see it cut, and the site ships a browser jigsaw that two people can solve together with no server behind it.
 
 - **Live:** https://unidragon.pages.dev
-- **Case study:** https://horbachov.com/#projects
 - **Reference site being redesigned:** `unidragon.us`
 - **Design specs:** [`docs/superpowers/specs/`](docs/superpowers/specs/) — the store redesign, the light theme and the jigsaw game
 
